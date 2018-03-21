@@ -61,6 +61,5 @@ int dnet_init() {
 
 void dnet_uninit(){
     //TODO: kill some thread release some resource
-
     dnet_crypt_uninit();
 }

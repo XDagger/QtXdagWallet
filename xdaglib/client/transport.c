@@ -278,7 +278,7 @@ int xdag_transport_start(int flags, const char *bindto, int npairs, const char *
 void xdag_transport_stop(){
     //free connections
     if(connections){
-        //free(connections);
+        free(connections);
     }
     //dnet uninit
     dnet_uninit();

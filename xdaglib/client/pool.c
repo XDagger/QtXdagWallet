@@ -75,7 +75,7 @@ struct miner {
 };
 
 struct xdag_pool_task g_xdag_pool_task[2];
-uint64_t g_xdag_pool_ntask;
+uint64_t g_xdag_pool_ntask = 0;
 /* a number of mining threads */
 int g_xdag_mining_threads = 0;
 xdag_hash_t g_xdag_mined_hashes[N_CONFIRMATIONS], g_xdag_mined_nonce[N_CONFIRMATIONS];
@@ -184,6 +184,7 @@ static void miner_net_thread_cleanup(void*arg){
 
     pthread_mutex_lock(&g_pool_cancel_mutex);
 
+    //global virables init
     g_miner_address = NULL;
     g_firstb = NULL;
     g_lastb = NULL;
@@ -196,6 +197,17 @@ static void miner_net_thread_cleanup(void*arg){
     g_stop_general_mining = 1;
     g_xdag_pool = 0;
     g_xdag_mining_threads = 0;
+    g_xdag_pool_ntask = 0;
+
+    //free some resource
+    if(g_xdag_pool_task[0].ctx){
+        free(g_xdag_pool_task[0].ctx);
+        g_xdag_pool_task[0].ctx = NULL;
+    }
+    if(g_xdag_pool_task[1].ctx){
+        free(g_xdag_pool_task[1].ctx);
+        g_xdag_pool_task[1].ctx = NULL;
+    }
 
     pthread_cond_signal(&g_pool_cancel_cond);
 

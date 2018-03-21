@@ -439,7 +439,7 @@ int dnet_crypt_init(const char *version) {
 
 void dnet_crypt_uninit(){
     //uninit crc
-    //crc_uninit();
+    crc_uninit();
 }
 
 static void dnet_session_init_crypt(struct dfslib_crypt *crypt, uint32_t sector[SECTOR_SIZE / 4]) {
