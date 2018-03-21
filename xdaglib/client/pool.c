@@ -94,10 +94,10 @@ static pthread_mutex_t g_share_mutex = PTHREAD_MUTEX_INITIALIZER;
 static const char *g_miner_address;
 /* poiter to mutex for optimal share  */
 void *g_ptr_share_mutex = &g_share_mutex;
-
-pthread_cond_t g_pool_cancel_cond = PTHREAD_COND_INITIALIZER;       /* for pool thread safe quit */
-pthread_mutex_t g_pool_cancel_mutex = PTHREAD_MUTEX_INITIALIZER;    /* for pool thread safe quit */
-pthread_t g_pool_thread_t;
+/* for pool thread safe quit */
+static pthread_cond_t g_pool_cancel_cond = PTHREAD_COND_INITIALIZER;
+static pthread_mutex_t g_pool_cancel_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_t g_pool_thread_t;
 
 #define diff2pay(d, n) ((n) ? exp((d) / (n) - 20) * (n) : 0)
 
@@ -535,4 +535,12 @@ int xdag_print_miners(FILE *out)
             "Total %d active miners.\n", res);
 
     return res;
+}
+//safe quit the pool thread
+void pool_uninit(){
+    pthread_mutex_lock(&g_pool_cancel_mutex);
+    pthread_cond_init(&g_pool_cancel_cond,NULL);
+    pthread_cancel(g_pool_thread_t);
+    pthread_cond_wait(&g_pool_cancel_cond,&g_pool_cancel_mutex);
+    pthread_mutex_unlock(&g_pool_cancel_mutex);
 }

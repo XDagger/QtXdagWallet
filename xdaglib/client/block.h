@@ -115,10 +115,8 @@ extern int xdag_print_block_info(xdag_hash_t hash, FILE *out);
 // return count of retrieved blocks
 extern int xdagGetLastMainBlocks(int count, char** addressArray);
 
-// for block thread safe quit
-extern pthread_cond_t g_block_cancel_cond;
-extern pthread_mutex_t g_block_cancel_mutex;
-extern pthread_t g_block_thread_t;
+//uninit block module
+extern void block_uninit();
 
 #ifdef __cplusplus
 }

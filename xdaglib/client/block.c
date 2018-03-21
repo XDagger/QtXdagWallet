@@ -78,9 +78,10 @@ static pthread_mutex_t block_mutex;
 //light wallet set g_light_mode default value 1
 static int g_light_mode = 1;
 
-pthread_cond_t g_block_cancel_cond = PTHREAD_COND_INITIALIZER;       /* for block thread safe quit */
-pthread_mutex_t g_block_cancel_mutex = PTHREAD_MUTEX_INITIALIZER;    /* for block thread safe quit */
-pthread_t g_block_thread_t;
+/* for block thread safe quit */
+static pthread_cond_t g_block_cancel_cond = PTHREAD_COND_INITIALIZER;
+static pthread_mutex_t g_block_cancel_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_t g_block_thread_t;
 
 static uint64_t get_timestamp(void)
 {
@@ -1460,4 +1461,13 @@ int xdagGetLastMainBlocks(int count, char** addressArray)
 		}
 	}
 	return i;
+}
+
+void block_uninit(){
+    //safe quit the work_thread
+    pthread_mutex_lock(&g_block_cancel_mutex);
+    pthread_cond_init(&g_block_cancel_cond,NULL);
+    pthread_cancel(g_block_thread_t);
+    pthread_cond_wait(&g_block_cancel_cond,&g_block_cancel_mutex);
+    pthread_mutex_unlock(&g_block_cancel_mutex);
 }
