@@ -116,7 +116,7 @@ extern int xdag_print_block_info(xdag_hash_t hash, FILE *out);
 extern int xdagGetLastMainBlocks(int count, char** addressArray);
 
 //uninit block module
-extern void block_uninit();
+extern void xdag_block_uninit();
 
 #ifdef __cplusplus
 }

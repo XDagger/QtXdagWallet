@@ -529,8 +529,8 @@ void xdag_show_state(xdag_hash_t hash)
 }
 
 void xdag_uninit(){
-    block_uninit();
-    pool_uninit();
+    xdag_block_uninit();
+    xdag_pool_uninit();
     g_xdag_state = XDAG_STATE_NINT;
     xdag_wallet_uninit();
     xdag_netdb_uninit();

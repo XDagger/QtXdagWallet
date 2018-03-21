@@ -1463,7 +1463,7 @@ int xdagGetLastMainBlocks(int count, char** addressArray)
 	return i;
 }
 
-void block_uninit(){
+void xdag_block_uninit(){
     //safe quit the work_thread
     pthread_mutex_lock(&g_block_cancel_mutex);
     pthread_cond_init(&g_block_cancel_cond,NULL);

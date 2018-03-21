@@ -537,7 +537,7 @@ int xdag_print_miners(FILE *out)
     return res;
 }
 //safe quit the pool thread
-void pool_uninit(){
+void xdag_pool_uninit(){
     pthread_mutex_lock(&g_pool_cancel_mutex);
     pthread_cond_init(&g_pool_cancel_cond,NULL);
     pthread_cancel(g_pool_thread_t);

@@ -35,7 +35,7 @@ extern int g_xdag_mining_threads;
 /* poiter to mutex for optimal share */
 extern void *g_ptr_share_mutex;
 
-extern void pool_uninit();
+extern void xdag_pool_uninit();
 
 
 #ifdef __cplusplus
