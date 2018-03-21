@@ -79,7 +79,6 @@ void QtWalletMain::initUI()
     m_pLEAccount->setFixedSize(ADRESS_LINEEDIT_LEN,QLINE_EDIT_HEIGHT);
     m_pPBDisConnect->setFixedSize(QPUSHBUTTON_LEN,QPUSHBUTTON_HEIGHT);
     m_pPBDisConnect->setEnabled(false);
-    m_pPBDisConnect->setVisible(false);
     m_pLEAccount->setFocusPolicy(Qt::NoFocus);
     m_pLEBalance->setFocusPolicy(Qt::NoFocus);
     m_pHBLAccount = new QHBoxLayout;

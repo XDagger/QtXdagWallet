@@ -124,6 +124,7 @@ void XdagWalletProcessThread::run()
     if(xdag_main(address) != 0){
         qDebug() << "xdag_main error while wallet initialized  ";
         xdag_wrapper_uninit();
+        m_pMutex->unlock();
         this->Stop();
         return;
     }
@@ -141,6 +142,7 @@ void XdagWalletProcessThread::run()
         if(isInterruptionRequested()){
             qDebug() << " wallet process thread interrupted by ui " << QThread::currentThreadId();
             xdag_wrapper_uninit();
+            m_pMutex->unlock();
             this->Stop();
             return;
         }

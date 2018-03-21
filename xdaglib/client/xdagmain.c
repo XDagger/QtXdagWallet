@@ -530,24 +530,17 @@ void xdag_show_state(xdag_hash_t hash)
 
 void xdag_uninit(){
 
-    //timespec t;
-
-    //quit the work_thread and miner_net_thread
     pthread_mutex_lock(&g_block_cancel_mutex);
-//    t.tv_sec = 3;
-//    t.tv_nsec = 0;
     pthread_cond_init(&g_block_cancel_cond,NULL);
     pthread_cancel(g_block_thread_t);
     pthread_cond_wait(&g_block_cancel_cond,&g_block_cancel_mutex);
     pthread_mutex_unlock(&g_block_cancel_mutex);
 
     pthread_mutex_lock(&g_pool_cancel_mutex);
-//    t.tv_sec = 3;
-//    t.tv_nsec = 0;
     pthread_cond_init(&g_pool_cancel_cond,NULL);
     pthread_cancel(g_pool_thread_t);
     pthread_cond_wait(&g_pool_cancel_cond,&g_pool_cancel_mutex);
-    pthread_mutex_unlock(&g_block_cancel_mutex);
+    pthread_mutex_unlock(&g_pool_cancel_mutex);
 
     g_xdag_state = XDAG_STATE_NINT;
     xdag_wallet_uninit();
