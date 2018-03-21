@@ -17,7 +17,9 @@ extern "C" {
 
 typedef enum {
     en_procedure_init_wallet    = 0,
-    en_procedure_xfer_coin      = 1
+    en_procedure_xfer_coin      = 1,
+    en_procedure_work_thread    = 2,
+    en_procedure_pool_thread    = 3
 } en_xdag_procedure_type;
 
 typedef enum {
@@ -50,6 +52,40 @@ typedef enum {
     en_event_xdag_log_print         = 0x5000,
     en_event_update_progress        = 0x5001,
     en_event_update_state           = 0x5002,
+
+    //block thread error(work_thread)
+
+
+
+    //pool thread error(miner_net_thread)
+//    mess = "can't create a block"
+//    mess = "can't find the block"
+//    mess = "can't load the block"
+//    mess = "cannot create a socket"
+//    mess = "host is not given"
+//    mess = "cannot resolve host "
+//    mess = "port is not given"
+//    mess = "cannot connect to the pool"
+//    mess = "socket is closed"
+//    mess = "socket hangup"
+//    mess = "socket error"
+//    mess = "read error on socket"
+//    mess = "write error on socket"
+
+    en_event_cannot_create_block    = 0x7000,
+    en_event_cannot_find_block      = 0x7001,
+    en_event_cannot_load_block      = 0x7002,
+    en_event_cannot_create_socket   = 0x7003,
+    en_event_host_is_not_given      = 0x7004,
+    en_event_cannot_reslove_host    = 0x7005,
+    en_event_port_is_not_given      = 0x7006,
+    en_event_cannot_connect_to_pool = 0x7007,
+    en_event_socket_isclosed        = 0x7008,
+    en_event_socket_hangup          = 0x7009,
+    en_event_socket_error           = 0x700a,
+    en_event_read_socket_error      = 0x700b,
+    en_event_write_socket_error     = 0x700c,
+
 
     en_event_unkown                 = 0xf000,
 } en_xdag_event_type;

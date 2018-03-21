@@ -79,6 +79,7 @@ static pthread_mutex_t block_mutex;
 static int g_light_mode = 1;
 
 /* for block thread safe quit */
+static int g_is_block_thread_run = 0;
 static pthread_cond_t g_block_cancel_cond = PTHREAD_COND_INITIALIZER;
 static pthread_mutex_t g_block_cancel_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_t g_block_thread_t;
@@ -959,7 +960,7 @@ static void reset_callback(struct ldus_rbtree *node)
 
 static void work_thread_cleanup(){
     xdag_app_debug(" work thread clean up called ");
-
+    g_is_block_thread_run = 0;
     pthread_mutex_unlock(&block_mutex);
     pthread_mutex_lock(&g_block_cancel_mutex);
 
@@ -1001,11 +1002,12 @@ static void *work_thread(void *arg)
 
 	// loading block from the local storage
 	g_xdag_state = XDAG_STATE_LOAD;
-	xdag_mess("Loading blocks from local storage...");
+    xdag_app_mess("Loading blocks from local storage...");
 	xdag_show_state(0);
 	xdag_load_blocks(t, get_timestamp(), &t, add_block_callback);
 
 begin:
+    g_is_block_thread_run = 1;
 	g_xdag_sync_on = 1;
         
 	for (;;) {
@@ -1465,9 +1467,12 @@ int xdagGetLastMainBlocks(int count, char** addressArray)
 
 void xdag_block_uninit(){
     //safe quit the work_thread
-    pthread_mutex_lock(&g_block_cancel_mutex);
-    pthread_cond_init(&g_block_cancel_cond,NULL);
-    pthread_cancel(g_block_thread_t);
-    pthread_cond_wait(&g_block_cancel_cond,&g_block_cancel_mutex);
-    pthread_mutex_unlock(&g_block_cancel_mutex);
+    if(g_is_block_thread_run){
+        g_is_block_thread_run = 0;
+        pthread_mutex_lock(&g_block_cancel_mutex);
+        pthread_cond_init(&g_block_cancel_cond,NULL);
+        pthread_cancel(g_block_thread_t);
+        pthread_cond_wait(&g_block_cancel_cond,&g_block_cancel_mutex);
+        pthread_mutex_unlock(&g_block_cancel_mutex);
+    }
 }

@@ -187,6 +187,7 @@ void QtWalletMain::translateUI(XdagCommonDefine::EN_XDAG_UI_LANG lang)
         setWindowTitle(tr("Dagger Wallet(XDAG)"));
         m_pLBPool->setText(tr("Pool"));
         m_pPBConnect->setText(tr("Connect"));
+        m_pPBDisConnect->setText(tr("DisConnect"));
 
         m_pLBBalance->setText(tr("Balance"));
         m_pLBAccount->setText(tr("Account"));
@@ -390,6 +391,30 @@ void QtWalletMain::onXdagUpdateUI(UpdateUiInfo info){
         {
             m_pErrDlg = new ErrorDialog(0,info.event_type);
             m_pErrDlg->exec();
+        }
+        break;
+        //pool thread error quit the pool thread
+        case en_event_cannot_create_block:
+        case en_event_cannot_find_block:
+        case en_event_cannot_load_block:
+        case en_event_cannot_create_socket:
+        case en_event_host_is_not_given:
+        case en_event_cannot_reslove_host:
+        case en_event_port_is_not_given:
+        case en_event_cannot_connect_to_pool:
+        case en_event_socket_isclosed:
+        case en_event_socket_hangup:
+        case en_event_socket_error:
+        case en_event_read_socket_error:
+        case en_event_write_socket_error:
+        {
+            //just show error do not block
+            m_pErrDlg = new ErrorDialog(0,info.event_type);
+            m_pErrDlg->show();
+
+            //wake and quit the xdag process thread
+            m_pXdagThread->requestInterruption();
+            g_condUiNotified.wakeAll();
         }
         break;
 

@@ -353,13 +353,34 @@ st_xdag_app_msg* XdagWalletProcessThread::XdagWalletProcessCallback(const void *
         case en_event_balance_too_small:
         case en_event_invalid_recv_address:
         case en_event_nothing_transfer:
-            mutex->lock();
+            //mutex->lock();
             qDebug() << " error while transfer xdag lock" << QThread::currentThreadId();
             updateUiInfo.event_type = event->event_type;
             updateUiInfo.procedure_type = event->procedure_type;
             thread->emitUISignal(updateUiInfo);
             qDebug() << " error while transfer xdag unlock " << QThread::currentThreadId();
-            mutex->unlock();
+            //mutex->unlock();
+        return NULL;
+
+        //pool error notify
+        case en_event_cannot_create_block:
+        case en_event_cannot_find_block:
+        case en_event_cannot_load_block:
+        case en_event_cannot_create_socket:
+        case en_event_host_is_not_given:
+        case en_event_cannot_reslove_host:
+        case en_event_port_is_not_given:
+        case en_event_cannot_connect_to_pool:
+        case en_event_socket_isclosed:
+        case en_event_socket_hangup:
+        case en_event_socket_error:
+        case en_event_read_socket_error:
+        case en_event_write_socket_error:
+            qDebug() << " error while pool thread running" << QThread::currentThreadId();
+            updateUiInfo.event_type = event->event_type;
+            updateUiInfo.procedure_type = event->procedure_type;
+            thread->emitUISignal(updateUiInfo);
+            qDebug() << " error while pool thread running " << QThread::currentThreadId();
         return NULL;
 
         case en_event_update_state:

@@ -95,11 +95,25 @@ static const char *g_miner_address;
 /* poiter to mutex for optimal share  */
 void *g_ptr_share_mutex = &g_share_mutex;
 /* for pool thread safe quit */
+static int g_is_pool_thread_run = 0;
 static pthread_cond_t g_pool_cancel_cond = PTHREAD_COND_INITIALIZER;
 static pthread_mutex_t g_pool_cancel_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_t g_pool_thread_t;
 
 #define diff2pay(d, n) ((n) ? exp((d) / (n) - 20) * (n) : 0)
+
+static void report_ui_pool_event(en_xdag_event_type event_type,const char* err_msg){
+
+    st_xdag_event event;
+    memset(&event,0,sizeof(st_xdag_event));
+    event.event_type = event_type;
+    event.procedure_type = en_procedure_pool_thread;
+
+    if(err_msg)
+        strncpy(event.error_msg,err_msg,strlen(err_msg));
+
+    g_app_callback_func(g_callback_object,&event);
+}
 
 static int send_to_pool(struct xdag_field *fld, int nfld)
 {
@@ -178,6 +192,7 @@ int xdag_send_block_via_pool(struct xdag_block *b)
 static void miner_net_thread_cleanup(void*arg){
 
     xdag_debug("call miner net thread clean up");
+    g_is_pool_thread_run = 0;
 
     pthread_mutex_unlock(&g_pool_mutex);
     pthread_mutex_unlock(&g_share_mutex);
@@ -192,7 +207,8 @@ static void miner_net_thread_cleanup(void*arg){
     g_max_nminers = START_N_MINERS;
     g_max_nminers_ip = START_N_MINERS_IP;
     g_nminers = 0;
-    g_socket = -1,
+    close(g_socket);
+    g_socket = -1;
     g_stop_mining = 1;
     g_stop_general_mining = 1;
     g_xdag_pool = 0;
@@ -241,6 +257,7 @@ static void *miner_net_thread(void *arg)
     pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED,&oldcanceltype);
     pthread_cleanup_push(miner_net_thread_cleanup,(void*)mess);
 
+    g_is_pool_thread_run = 0;
     while (!g_xdag_sync_on) {
         pthread_testcancel();
         sleep(1);
@@ -255,6 +272,7 @@ static void *miner_net_thread(void *arg)
 
     if (xdag_get_our_block(hash)) {
         mess = "can't create a block";
+        report_ui_pool_event(en_event_cannot_create_block,mess);
         pthread_exit((void*)NULL);
     }
 
@@ -262,12 +280,14 @@ static void *miner_net_thread(void *arg)
 
     if (pos < 0) {
         mess = "can't find the block";
+        report_ui_pool_event(en_event_cannot_find_block,mess);
         pthread_exit((void*)NULL);
     }
 
     struct xdag_block *blk = xdag_storage_load(hash, t, pos, &b);
     if (!blk) {
         mess = "can't load the block";
+        report_ui_pool_event(en_event_cannot_load_block,mess);
         pthread_exit((void*)NULL);
     }
     if (blk != &b) memcpy(&b, blk, sizeof(struct xdag_block));
@@ -278,6 +298,7 @@ static void *miner_net_thread(void *arg)
     if (g_socket == INVALID_SOCKET) {
         pthread_mutex_unlock(&g_pool_mutex);
         mess = "cannot create a socket";
+        report_ui_pool_event(en_event_cannot_create_socket,mess);
         pthread_exit((void*)NULL);
     }
     if (fcntl(g_socket, F_SETFD, FD_CLOEXEC) == -1) {
@@ -294,6 +315,7 @@ static void *miner_net_thread(void *arg)
     if (!s) {
         pthread_mutex_unlock(&g_pool_mutex);
         mess = "host is not given";
+        report_ui_pool_event(en_event_host_is_not_given,mess);
         pthread_exit((void*)NULL);
     }
     if (!strcmp(s, "any")) {
@@ -303,6 +325,7 @@ static void *miner_net_thread(void *arg)
         if (!host || !host->h_addr_list[0]) {
             pthread_mutex_unlock(&g_pool_mutex);
             mess = "cannot resolve host ", mess1 = s;
+            report_ui_pool_event(en_event_cannot_reslove_host,mess);
             res = h_errno;
             pthread_exit((void*)NULL);
         }
@@ -315,6 +338,7 @@ static void *miner_net_thread(void *arg)
     if (!s) {
         pthread_mutex_unlock(&g_pool_mutex);
         mess = "port is not given";
+        report_ui_pool_event(en_event_port_is_not_given,mess);
         pthread_exit((void*)NULL);
     }
     peeraddr.sin_port = htons(atoi(s));
@@ -329,11 +353,13 @@ static void *miner_net_thread(void *arg)
     if (res) {
         pthread_mutex_unlock(&g_pool_mutex);
         mess = "cannot connect to the pool";
+        report_ui_pool_event(en_event_cannot_connect_to_pool,mess);
         pthread_exit((void*)NULL);
     }
 
     if (send_to_pool(b.field, XDAG_BLOCK_FIELDS) < 0) {
         mess = "socket is closed";
+        report_ui_pool_event(en_event_socket_isclosed,mess);
         pthread_exit((void*)NULL);
     }
 
@@ -344,9 +370,10 @@ static void *miner_net_thread(void *arg)
         pthread_mutex_lock(&g_pool_mutex);
 
         if (g_socket < 0) {
-                pthread_mutex_unlock(&g_pool_mutex);
-                mess = "socket is closed";
-                pthread_exit((void*)NULL);
+            pthread_mutex_unlock(&g_pool_mutex);
+            mess = "socket is closed";
+            report_ui_pool_event(en_event_socket_isclosed,mess);
+            pthread_exit((void*)NULL);
         }
 
         p.fd = g_socket;
@@ -362,12 +389,14 @@ static void *miner_net_thread(void *arg)
         if (p.revents & POLLHUP) {
             pthread_mutex_unlock(&g_pool_mutex);
             mess = "socket hangup";
+            report_ui_pool_event(en_event_socket_hangup,mess);
             pthread_exit((void*)NULL);
         }
 
         if (p.revents & POLLERR) {
             pthread_mutex_unlock(&g_pool_mutex);
             mess = "socket error";
+            report_ui_pool_event(en_event_socket_error,mess);
             pthread_exit((void*)NULL);
         }
 
@@ -376,6 +405,7 @@ static void *miner_net_thread(void *arg)
             if (res < 0) {
                 pthread_mutex_unlock(&g_pool_mutex);
                 mess = "read error on socket";
+                report_ui_pool_event(en_event_read_socket_error,mess);
                 pthread_exit((void*)NULL);
             }
             ndata += res;
@@ -434,6 +464,7 @@ static void *miner_net_thread(void *arg)
 
             if (res) {
                 mess = "write error on socket";
+                report_ui_pool_event(en_event_write_socket_error,mess);
                 pthread_exit((void*)NULL);
             }
         } else {
@@ -548,11 +579,15 @@ int xdag_print_miners(FILE *out)
 
     return res;
 }
-//safe quit the pool thread
 void xdag_pool_uninit(){
-    pthread_mutex_lock(&g_pool_cancel_mutex);
-    pthread_cond_init(&g_pool_cancel_cond,NULL);
-    pthread_cancel(g_pool_thread_t);
-    pthread_cond_wait(&g_pool_cancel_cond,&g_pool_cancel_mutex);
-    pthread_mutex_unlock(&g_pool_cancel_mutex);
+    //if pool thread is run wait the thread quit and
+    //release resource in miner_net_thread_cleanup
+    if(g_is_pool_thread_run){
+        g_is_pool_thread_run = 0;
+        pthread_mutex_lock(&g_pool_cancel_mutex);
+        pthread_cond_init(&g_pool_cancel_cond,NULL);
+        pthread_cancel(g_pool_thread_t);
+        pthread_cond_wait(&g_pool_cancel_cond,&g_pool_cancel_mutex);
+        pthread_mutex_unlock(&g_pool_cancel_mutex);
+    }
 }
