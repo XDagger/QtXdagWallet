@@ -95,7 +95,13 @@ win32 {
         $$PWD/win64_dependency/dll/libssl32.dll \
         $$PWD/win64_dependency/dll/msvcr100.dll \
         $$PWD/win64_dependency/dll/pthreadVC2.dll \
-        $$PWD/win64_dependency/dll/ssleay32.dll
+        $$PWD/win64_dependency/dll/ssleay32.dll \
+        $$PWD/win64_dependency/dll/Qt5Core.dll \
+        $$PWD/win64_dependency/dll/Qt5Gui.dll \
+        $$PWD/win64_dependency/dll/Qt5Widgets.dll \
+        $$PWD/win64_dependency/dll/platforms/qminimal.dll \
+        $$PWD/win64_dependency/dll/platforms/qoffscreen.dll \
+        $$PWD/win64_dependency/dll/platforms/qwindows.dll
 
     EXTRA_BINFILES_WIN = $${EXTRA_BINFILES}
     EXTRA_BINFILES_WIN ~= s,/,\\,g
