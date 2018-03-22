@@ -257,7 +257,7 @@ static void *miner_net_thread(void *arg)
     pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED,&oldcanceltype);
     pthread_cleanup_push(miner_net_thread_cleanup,(void*)mess);
 
-    g_is_pool_thread_run = 0;
+    g_is_pool_thread_run = 1;
     while (!g_xdag_sync_on) {
         pthread_testcancel();
         sleep(1);
