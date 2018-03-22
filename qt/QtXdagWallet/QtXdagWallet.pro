@@ -99,9 +99,9 @@ win32 {
         $$PWD/win64_dependency/dll/Qt5Core.dll \
         $$PWD/win64_dependency/dll/Qt5Gui.dll \
         $$PWD/win64_dependency/dll/Qt5Widgets.dll \
-        $$PWD/win64_dependency/dll/platforms/qminimal.dll \
-        $$PWD/win64_dependency/dll/platforms/qoffscreen.dll \
-        $$PWD/win64_dependency/dll/platforms/qwindows.dll
+
+    PLATFORM_DIC  += $$PWD/win64_dependency/dll/platforms
+    PLATFORM_DIC ~= s,/,\\,g
 
     EXTRA_BINFILES_WIN = $${EXTRA_BINFILES}
     EXTRA_BINFILES_WIN ~= s,/,\\,g
@@ -111,13 +111,18 @@ win32 {
         OBJECTS_DIR = $$PWD\debug
         MOC_DIR = $$PWD\debug
         TARGET = xdagwallet
-        QMAKE_CLEAN += $$DESTDIR\*.pdb $$DESTDIR\*.dll $$DESTDIR\*.exe
+        QMAKE_CLEAN += $$DESTDIR\*.pdb $$DESTDIR\*.dll $$DESTDIR\*.exe $$DESTDIR\platforms\*.dll
+        QMAKE_CLEAN += $$DESTDIR\*.*
 
 
         DEBUG_DESTDIR_WIN = $${DESTDIR}
+        DEBUG_DESTDIR_WIN_PLATFORM = $${DESTDIR}/platforms
         DEBUG_DESTDIR_WIN ~= s,/,\\,g
+        DEBUG_DESTDIR_WIN_PLATFORM ~= s,/,\\,g
+        QMAKE_POST_LINK +=$$quote(if not exist $${DEBUG_DESTDIR_WIN_PLATFORM} mkdir $${DEBUG_DESTDIR_WIN_PLATFORM}$$escape_expand(\n\t))
+        QMAKE_POST_LINK +=$$quote(xcopy/e/r/h/y $${PLATFORM_DIC} $${DEBUG_DESTDIR_WIN_PLATFORM}$$escape_expand(\n\t))
         for(FILE,EXTRA_BINFILES_WIN){
-            QMAKE_POST_LINK +=$$quote(cmd /c copy /y $${FILE} $${DEBUG_DESTDIR_WIN}$$escape_expand(\n\t))
+            QMAKE_POST_LINK +=$$quote(copy $${FILE} $${DEBUG_DESTDIR_WIN}$$escape_expand(\n\t))
         }
     }
 
@@ -126,13 +131,18 @@ win32 {
         OBJECTS_DIR = $$PWD\release
         MOC_DIR = $$PWD\release
         TARGET = xdagwallet
-        QMAKE_CLEAN += $$DESTDIR\*.pdb $$DESTDIR\*.dll $$DESTDIR\*.exe
+        QMAKE_CLEAN += $$DESTDIR\*.pdb $$DESTDIR\*.dll $$DESTDIR\*.exe $$DESTDIR\platforms\*.dll
 
         RELEASE_DESTDIR_WIN = $${DESTDIR}
+        RELEASE_DESTDIR_WIN_PLATFORM = $${DESTDIR}/platforms
         RELEASE_DESTDIR_WIN ~= s,/,\\,g
+        RELEASE_DESTDIR_WIN_PLATFORM ~= s,/,\\,g
+        QMAKE_POST_LINK +=$$quote(if not exist $${RELEASE_DESTDIR_WIN_PLATFORM} mkdir $${RELEASE_DESTDIR_WIN_PLATFORM}$$escape_expand(\n\t))
+        QMAKE_POST_LINK +=$$quote(xcopy/e/r/h/y $${PLATFORM_DIC} $${RELEASE_DESTDIR_WIN_PLATFORM}$$escape_expand(\n\t))
         for(FILE,EXTRA_BINFILES_WIN){
-            QMAKE_POST_LINK +=$$quote(cmd /c copy /y $${FILE} $${RELEASE_DESTDIR_WIN}$$escape_expand(\n\t))
+            QMAKE_POST_LINK +=$$quote(copy $${FILE} $${RELEASE_DESTDIR_WIN}$$escape_expand(\n\t))
         }
+
     }
 
 }
