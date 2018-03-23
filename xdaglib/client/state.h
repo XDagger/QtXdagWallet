@@ -1,9 +1,5 @@
 /* состояние программы, T13.788-T13.841; $DVS:time$ */
-
-//#ifdef __cplusplus
-//extern "C" {
-//#endif
-
+xdag_state(NINT, "")
 xdag_state(INIT, "Initializing.")
 xdag_state(KEYS, "Generating keys...")
 xdag_state(REST, "The local storage is corrupted. Resetting blocks engine.")
@@ -22,7 +18,3 @@ xdag_state(MTST, "Connected to the testnet pool. Mining on. Normal testing.")
 xdag_state(MINE, "Connected to the mainnet pool. Mining on. Normal operation.")
 xdag_state(STST, "Synchronized with the test network. Normal testing.")
 xdag_state(SYNC, "Synchronized with the main network. Normal operation.")
-
-//#ifdef __cplusplus
-//}
-//#endif

@@ -34,6 +34,7 @@ struct dnet_session_ops {
 extern int dnet_limited_version;
 
 extern int dnet_crypt_init(const char *version);
+extern void dnet_crypt_uninit();
 
 extern struct dnet_session *dnet_session_create(void *private_data, const struct dnet_session_ops *ops, uint32_t route_ip, uint16_t route_port);
 extern int dnet_session_init(struct dnet_session *sess);

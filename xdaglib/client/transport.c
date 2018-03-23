@@ -272,6 +272,17 @@ int xdag_transport_start(int flags, const char *bindto, int npairs, const char *
 	
 	return res;
 }
+/*
+    stop transfer whille program exit
+*/
+void xdag_transport_stop(){
+    //free connections
+    if(connections){
+        free(connections);
+    }
+    //dnet uninit
+    dnet_uninit();
+}
 
 /* generates an array with random data */
 int xdag_generate_random_array(void *array, unsigned long size)

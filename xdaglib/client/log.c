@@ -12,7 +12,6 @@
 
 #define XDAG_LOG_FILE "%s.log"
 #define XDAG_APP_LOG_BUF_SIZE 4096
-char* g_xdag_app_log_buff = NULL;
 static pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t app_log_mutex = PTHREAD_MUTEX_INITIALIZER;
 static int log_level = XDAG_INFO;
@@ -95,23 +94,6 @@ extern int xdag_set_log_level(int level)
 	return level0;
 }
 
-/* log utils for app start */
-int xdag_app_log_init(){
-
-    //malloc memory for app log
-    pthread_mutex_lock(&app_log_mutex);
-
-    g_xdag_app_log_buff = (char*)malloc(XDAG_APP_LOG_BUF_SIZE * sizeof(char));
-    if(!g_xdag_app_log_buff){
-        pthread_mutex_unlock(&app_log_mutex);
-        return -1;
-    }
-    memset(g_xdag_app_log_buff,0,XDAG_APP_LOG_BUF_SIZE);
-
-    pthread_mutex_unlock(&app_log_mutex);
-    return 0;
-}
-
 char* app_level_str(en_xdag_app_log_level level){
     switch (level) {
         case en_xdag_no_error:
@@ -160,7 +142,11 @@ void xdag_app_log(en_xdag_app_log_level level,const char* file,int line,const ch
 
     //printf level, file, line ,time,threadid
     pthread_mutex_lock(&app_log_mutex);
-    memset(g_xdag_app_log_buff,0,XDAG_APP_LOG_BUF_SIZE);
+
+    st_xdag_event event;
+    event.event_type = en_event_xdag_log_print;
+    event.log_level = level;
+
 
     //debug warning error critical fatal will print time,file,line,thread id
     if(level == en_xdag_debug ||
@@ -168,38 +154,21 @@ void xdag_app_log(en_xdag_app_log_level level,const char* file,int line,const ch
         level == en_xdag_error||
         level == en_xdag_critical ||
         level == en_xdag_fatal){
-        pos += sprintf(g_xdag_app_log_buff,"[%s][%s][%s][%d][%lu]",
+        pos += sprintf(event.app_log_msg,"[%s][%s][%s][%d][%lu]",
                        app_level_str(level),tbuf,filename(file),line,pthread_self());
     }
 
     //printf log msg
     va_start(arg, format);
-    done = vsprintf(g_xdag_app_log_buff + pos, format, arg);
+    done = vsprintf(event.app_log_msg + pos, format, arg);
     va_end(arg);
 
     //invoke app log function
-    st_xdag_event event;
-    event.event_type = en_event_xdag_log_print;
-    event.log_level = level;
-    event.app_log_msg = g_xdag_app_log_buff;
     g_app_callback_func(g_callback_object,&event);
 
     pthread_mutex_unlock(&app_log_mutex);
 
     return;
-}
-
-void xdag_app_log_finish(){
-
-    pthread_mutex_lock(&app_log_mutex);
-
-    //free memory
-    if(g_xdag_app_log_buff){
-        free(g_xdag_app_log_buff);
-        g_xdag_app_log_buff = NULL;
-    }
-
-    pthread_mutex_unlock(&app_log_mutex);
 }
 
 int xdag_set_app_log_level(en_xdag_app_log_level level)

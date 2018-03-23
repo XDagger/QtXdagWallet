@@ -9,6 +9,8 @@ extern "C" {
 
 extern int dnet_init();
 
+extern void dnet_uninit();
+
 extern int dnet_generate_random_array(void *array, unsigned long size);
 
 extern int dnet_set_xdag_callback(int (*callback)(void *block, void *connection_from));

@@ -1,5 +1,5 @@
-#ifndef _SYSTEM_H
-#define _SYSTEM_H
+#ifndef _SYSTEM_DNET_H
+#define _SYSTEM_DNET_H
 
 #ifdef __cplusplus
 extern "C" {

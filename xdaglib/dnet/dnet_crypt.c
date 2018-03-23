@@ -56,13 +56,13 @@ static int g_keylen = 0;
 
 static int input_password(const char *prompt, char *buf, unsigned len) {
 	struct termios t[1];
-    int noecho = !!strstr(prompt, "assword");
-    printf("%s: ", prompt); fflush(stdout);
-    if (noecho) {
-        tcgetattr(0, t);
-        t->c_lflag &= ~ECHO;
-        tcsetattr(0, TCSANOW, t);
-    }
+	int noecho = !!strstr(prompt, "assword");
+	printf("%s: ", prompt); fflush(stdout);
+	if (noecho) {
+		tcgetattr(0, t);
+		t->c_lflag &= ~ECHO;
+		tcsetattr(0, TCSANOW, t);
+	}
 
     //invoke ui callback
     st_xdag_event event;
@@ -209,15 +209,9 @@ static int dnet_test_keys(void) {
 static int set_user_crypt(struct dfslib_string *pwd) {
 	uint32_t sector0[128];
 	int i;
-
-	
 	g_dnet_user_crypt = malloc(sizeof(struct dfslib_crypt));
 	if (!g_dnet_user_crypt) return -1;
-
-	//清空密码缓冲区,如果输入密码为空，ispwd的值是？？
 	memset(g_dnet_user_crypt->pwd, 0, sizeof(g_dnet_user_crypt->pwd));
-
-
 	dfslib_crypt_set_password(g_dnet_user_crypt, pwd);
 	for (i = 0; i < 128; ++i) sector0[i] = 0x4ab29f51u + i * 0xc3807e6du;
 	for (i = 0; i < 128; ++i) {
@@ -254,7 +248,11 @@ int dnet_user_crypt_action(unsigned *data, unsigned long long data_id, unsigned 
 				if (!crypt) return -1;
 				memset(pwd, 0, 256);
 				memset(&str, 0, sizeof(struct dfslib_string));
-				(*g_input_password)("Password", pwd, 256);
+
+                res = (*g_input_password)("Password", pwd, 256);
+                if(res == -1){
+                    return -1;
+                }
 				dfslib_utf8_string(&str, pwd, strlen(pwd));
 				memset(crypt->pwd, 0, sizeof(crypt->pwd));
 				crypt->ispwd = 0;
@@ -268,10 +266,15 @@ int dnet_user_crypt_action(unsigned *data, unsigned long long data_id, unsigned 
 			{
 				struct dfslib_crypt *crypt = malloc(sizeof(struct dfslib_crypt));
 				struct dfslib_string str;
+                int res;
 				char pwd[256];
 				memset(pwd, 0, 256);
 				memset(&str, 0, sizeof(struct dfslib_string));
-				(*g_input_password)("Password", pwd, 256);
+
+                res = (*g_input_password)("Password", pwd, 256);
+                if(res == -1){
+                    return -1;
+                }
 				dfslib_utf8_string(&str, pwd, strlen(pwd));
 				memset(crypt->pwd, 0, sizeof(crypt->pwd));
 				dfslib_crypt_set_password(crypt, &str);
@@ -291,11 +294,10 @@ int dnet_user_crypt_action(unsigned *data, unsigned long long data_id, unsigned 
 
 int dnet_crypt_init(const char *version) {
 
-	int i;
     FILE *f;
     struct dnet_keys *keys;
     struct dnet_host *host;
-	
+    int i;
     g_dnet_keys = malloc(sizeof(struct dnet_keys));
 	if (!g_dnet_keys) {
 		printf(" malloc memory for g_dnet_keys failed \n ");
@@ -304,116 +306,140 @@ int dnet_crypt_init(const char *version) {
 
     keys = g_dnet_keys;
     dfslib_random_init();
-	if (crc_init()) {
-		printf(" crc init error \n");
-		return 2;
-	}
+    if (crc_init()) {
+        printf(" crc init error \n");
+        return 2;
+    }
 
     f = fopen(KEYFILE, "rb");
     if (f) {
-		if (fread(keys, sizeof(struct dnet_keys), 1, f) != 1) {
+        if (fread(keys, sizeof(struct dnet_keys), 1, f) != 1) {
+                fclose(f);
+                f = 0;
+        }
+        else {
+                g_keylen = dnet_detect_keylen(keys->pub.key, DNET_KEYLEN);
+                if (dnet_test_keys()) {
+                    int res;
+                    struct dfslib_string str;
+                    char pwd[256];
 
-			fclose(f);
-			f = 0;
-		} 
-		else {
-			g_keylen = dnet_detect_keylen(keys->pub.key, DNET_KEYLEN);
-			if (dnet_test_keys()) {
-				struct dfslib_string str;
-				char pwd[256];
-				(*g_input_password)("Password", pwd, 256);
-				dfslib_utf8_string(&str, pwd, strlen(pwd));
-				set_user_crypt(&str);
-				if (g_dnet_user_crypt) {
-					for (i = 0; i < (sizeof(struct dnet_keys) >> 9); ++i)
-						dfslib_uncrypt_sector(g_dnet_user_crypt, (uint32_t *)keys + 128 * i, ~(uint64_t)i);
-				} 
-				g_keylen = 0;
-				g_keylen = dnet_detect_keylen(keys->pub.key, DNET_KEYLEN);
-			}
-		}
+                    res = (*g_input_password)("Password", pwd, 256);
+                    if(res == -1){
+                        fclose(f);
+                        return -1;
+                    }
+
+                    dfslib_utf8_string(&str, pwd, strlen(pwd));
+                    set_user_crypt(&str);
+                    if (g_dnet_user_crypt) {
+                        for (i = 0; i < (sizeof(struct dnet_keys) >> 9); ++i)
+                                dfslib_uncrypt_sector(g_dnet_user_crypt, (uint32_t *)keys + 128 * i, ~(uint64_t)i);
+                    }
+                    g_keylen = 0;
+                    g_keylen = dnet_detect_keylen(keys->pub.key, DNET_KEYLEN);
+                }
+        }
     }
     if (!f) {
-		int len;
+        int res;
+        int len;
         char buf[256];
-		char pwd[256], pwd1[256];
+        char pwd[256], pwd1[256];
 
-		struct dfslib_string str, str1;
-		f = fopen(KEYFILE, "wb");
+        struct dfslib_string str, str1;
+        f = fopen(KEYFILE, "wb");
 
-		if (!f) {
+        if (!f) {
+            report_ui_walletinit_event(en_event_open_dnetfile_error,NULL);
+            return 3;
+        }
 
-            //invoke ui callback to display error
-            st_xdag_event event;
-            event.procedure_type = en_procedure_init_wallet;
-            event.event_type = en_event_open_dnetfile_error;
-            strcpy(event.error_msg,strerror(_errno()));
-            g_app_callback_func(g_callback_object,&event);
+        //request user to input password
+        memset(buf, 0, 256);
 
-			return 3;
-		} 
+        res = (*g_input_password)("Set password", pwd, 256);
+        if(res == -1){
+            fclose(f);
+            dnet_log_printf("user cancel password type in");
+            return -1;
+        }
 
-		memset(buf, 0, 256);
+        dfslib_utf8_string(&str, pwd, strlen(pwd));
+        res = (*g_input_password)("Re-type password", pwd1, 256);
+        if(res == -1){
+            fclose(f);
+            dnet_log_printf("user cancel password re-type in");
+            return -1;
+        }
+        dfslib_utf8_string(&str1, pwd1, strlen(pwd1));
+        if (str.len != str1.len || memcmp(str.utf8, str1.utf8, str.len)) {
+            fclose(f);
+            report_ui_walletinit_event(en_event_pwd_not_same,NULL);
+            return 4;
+        }
 
-		//要求输入密码
-		(*g_input_password)("Set password", pwd, 256);
-		dfslib_utf8_string(&str, pwd, strlen(pwd));
-
-		//确认密码
-		(*g_input_password)("Re-type password", pwd1, 256);
-		dfslib_utf8_string(&str1, pwd1, strlen(pwd1));
-
-		//如果两次密码不一致
-		if (str.len != str1.len || memcmp(str.utf8, str1.utf8, str.len)) {
-			printf("Passwords differ.\n"); return 4;
-		}
-
-		if (str.len) set_user_crypt(&str);
-		(*g_input_password)("Type random keys", buf, 256);
+        if (str.len) set_user_crypt(&str);
+        res = (*g_input_password)("Type random keys", buf, 256);
+        if(res == -1){
+            fclose(f);
+            dnet_log_printf("user cancel random type in");
+            return -1;
+        }
 
         dfslib_random_fill(keys->pub.key, DNET_KEYLEN * sizeof(dfsrsa_t), 0, dfslib_utf8_string(&str, buf, strlen(buf)));
-		printf("Generating host keys... \n");
+        printf("Generating host keys... \n");
+        g_keylen = DNET_KEYLEN;
 
-		g_keylen = DNET_KEYLEN;
+        //generate public key and private key
+        dfsrsa_keygen(keys->priv.key, keys->pub.key, g_keylen);
+        dnet_make_key(keys->priv.key, g_keylen);
+        dnet_make_key(keys->pub.key, g_keylen);
 
-		//生成私钥和公钥
-		dfsrsa_keygen(keys->priv.key, keys->pub.key, g_keylen);
-		dnet_make_key(keys->priv.key, g_keylen);
-		dnet_make_key(keys->pub.key, g_keylen);
+        if (g_dnet_user_crypt) {
+            for (i = 0; i < (sizeof(struct dnet_keys) >> 9); ++i) {
+                dfslib_encrypt_sector(g_dnet_user_crypt, (uint32_t *)keys + 128 * i, ~(uint64_t)i);
+            }
+        }
 
-		printf("OK.\n");
+        //store public and private key to dnet.dat
+        if (fwrite(keys, sizeof(struct dnet_keys), 1, f) != 1) {
+            fclose(f);
+            report_ui_walletinit_event(en_event_write_dnet_file_error,NULL);
+            return 5;
+        }
 
-		if (g_dnet_user_crypt) {
-			for (i = 0; i < (sizeof(struct dnet_keys) >> 9); ++i) {
-				dfslib_encrypt_sector(g_dnet_user_crypt, (uint32_t *)keys + 128 * i, ~(uint64_t)i);
-			}
-		}
-
-		//保存私钥和公钥到文件
-		if (fwrite(keys, sizeof(struct dnet_keys), 1, f) != 1) {
-			return 5;
-		}
-
-		if (g_dnet_user_crypt) {
-			for (i = 0; i < (sizeof(struct dnet_keys) >> 9); ++i) {
-				dfslib_uncrypt_sector(g_dnet_user_crypt, (uint32_t *)keys + 128 * i, ~(uint64_t)i);
-			}
-		} 
-	}
+        if (g_dnet_user_crypt) {
+            for (i = 0; i < (sizeof(struct dnet_keys) >> 9); ++i) {
+                dfslib_uncrypt_sector(g_dnet_user_crypt, (uint32_t *)keys + 128 * i, ~(uint64_t)i);
+            }
+        }
+    }
 
     fclose(f);
 
-	//添加信任主机 keys = g_dnet_keys，也就是给公钥保存主机
-	if (!(host = dnet_add_host(&g_dnet_keys->pub, 0, 127 << 24 | 1, 0, DNET_ROUTE_LOCAL))) {
-		return 6;
-	} 
+    //add trust hosts
+    if (!(host = dnet_add_host(&g_dnet_keys->pub, 0, 127 << 24 | 1, 0, DNET_ROUTE_LOCAL))) {
+        report_ui_walletinit_event(en_event_add_trust_host_error,NULL);
+        return 6;
+    }
 
-	version = strchr(version, '-');
-	if (version) {
-		dnet_set_host_version(host, version + 1);
-	}
-		
-    return -dnet_test_keys();
+    version = strchr(version, '-');
+    if (version) {
+        dnet_set_host_version(host, version + 1);
+    }
+
+    int res = -dnet_test_keys();
+    if(res){
+        report_ui_walletinit_event(en_event_pwd_error,NULL);
+    }
+
+    return res;
+}
+
+void dnet_crypt_uninit(){
+    //uninit crc
+    crc_uninit();
 }
 
 static void dnet_session_init_crypt(struct dfslib_crypt *crypt, uint32_t sector[SECTOR_SIZE / 4]) {

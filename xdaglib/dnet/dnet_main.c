@@ -35,27 +35,31 @@ int dnet_init() {
     const char *mess = 0;
 
     if (system_init() || dnet_threads_init() || dnet_hosts_init()) {
-		err = 4; 
-		printf("initializing error\n");
-		return err;
+        err = 4;
+        printf("initializing error\n");
+        return err;
     }
 
-	if ((err = dnet_crypt_init(DNET_VERSION))) {
-		sleep(3);
-		printf("Password incorrect.\n");
-		return err;
-	}
+    if ((err = dnet_crypt_init(DNET_VERSION))) {
+        //sleep(3);
+        return err;
+    }
 
-	//create watch dog thread and collector thread
-	thread_watchdog = malloc(sizeof(struct dnet_thread));
-	thread_watchdog->type = DNET_THREAD_WATCHDOG;
-	res = dnet_thread_create(thread_watchdog);
+    //create watch dog thread and collector thread
+    thread_watchdog = malloc(sizeof(struct dnet_thread));
+    thread_watchdog->type = DNET_THREAD_WATCHDOG;
+    res = dnet_thread_create(thread_watchdog);
 
-	thread_collector = malloc(sizeof(struct dnet_thread));
-	thread_collector->type = DNET_THREAD_COLLECTOR;
-	res = dnet_thread_create(thread_collector);
+    thread_collector = malloc(sizeof(struct dnet_thread));
+    thread_collector->type = DNET_THREAD_COLLECTOR;
+    res = dnet_thread_create(thread_collector);
 
-	if (res) { err = 3; return err; }
+    if (res) { err = 3; return err; }
 
     return err;
+}
+
+void dnet_uninit(){
+    //TODO: kill some thread release some resource
+    dnet_crypt_uninit();
 }

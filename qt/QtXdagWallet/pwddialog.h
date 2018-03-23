@@ -1,6 +1,7 @@
 #ifndef PWDDIALOG_H
 #define PWDDIALOG_H
 
+#include "ErrorDialog.h"
 #include "PwdLineEdit.h"
 
 #include <QDialog>
@@ -8,6 +9,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
+#include <QRegExp>
 
 namespace Ui {
 class PwdDialog;
@@ -50,6 +52,10 @@ private:
     QVBoxLayout *m_pVBLGlobal;
 
     PWD_DLG_TYPE mDlgType;
+    ErrorDialog *m_pErrDlg;
+
+    QRegExp mPwdRegExp;
+    const QString mPwdExp = "^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z]{8,16}$";
 
 private slots:
     void onBtnOKClicked();

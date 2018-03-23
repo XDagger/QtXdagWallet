@@ -10,6 +10,9 @@ class UpdateUiInfo{
 public:
     en_xdag_event_type event_type;
     en_xdag_procedure_type procedure_type;
+    en_xdag_program_state xdag_program_state;
+    en_balance_load_state balance_state;
+    en_address_load_state address_state;
 
     QString address;
     QString balance;

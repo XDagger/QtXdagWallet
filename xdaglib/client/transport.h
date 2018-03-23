@@ -22,6 +22,8 @@ enum xdag_transport_flags {
  */
 extern int xdag_transport_start(int flags, const char *bindto, int npairs, const char **addr_port_pairs);
 
+extern void xdag_transport_stop();
+
 /* generates an array with random data */
 extern int xdag_generate_random_array(void *array, unsigned long size);
 

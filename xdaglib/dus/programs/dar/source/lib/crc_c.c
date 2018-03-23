@@ -44,11 +44,21 @@ int crc_makeTable(unsigned table[256]){
 } 
 
 int crc_init(void){
-	if(crc_table) return (long)version;
+        if(crc_table) {
+            free(crc_table);
+            crc_table = NULL;
+        }
 	crc_table=malloc(256*sizeof(unsigned));
 	if(!crc_table) _errn(0);
 	crc_makeTable(crc_table);
 	return 0;
+}
+
+void crc_uninit(){
+    if(crc_table){
+        free(crc_table);
+        crc_table = NULL;
+    }
 }
 
 #define crc_addChar(crc,c) ((crc)=crc_table[(unsigned char)(crc)^(c)]^((crc)>>8))

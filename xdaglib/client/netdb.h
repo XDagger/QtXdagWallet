@@ -23,6 +23,9 @@ extern unsigned xdag_netdb_receive(const uint8_t *data, unsigned len);
 /* completes the work with the host database */
 extern void xdag_netdb_finish(void);
 
+/* release wallet resource while program exit */
+extern void xdag_netdb_uninit(void);
+
 /* blocked ip for incoming connections and their number */
 extern uint32_t *g_xdag_blocked_ips, *g_xdag_white_ips;
 extern int g_xdag_n_blocked_ips, g_xdag_n_white_ips;

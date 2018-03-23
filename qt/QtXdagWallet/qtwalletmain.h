@@ -1,6 +1,7 @@
 #ifndef QTWALLETMAIN_H
 #define QTWALLETMAIN_H
 
+#include "ErrorDialog.h"
 #include "PwdDialog.h"
 #include "XdagWalletProcessThread.h"
 #include "xdagcommondefine.h"
@@ -27,17 +28,15 @@ public:
     explicit QtWalletMain(QWidget *parent = 0);
     ~QtWalletMain();
 
+    static QString getXdagProgramState(en_xdag_program_state state);
+
 private:
     Ui::QtWalletMain *ui;
-
-    void initUI();
-    void translateUI(XdagCommonDefine::EN_XDAG_UI_LANG lang);
-    void initWorkThread();
-    void initSignal();
 
     QLabel *m_pLBPool;
     QLineEdit *m_pLEPool;
     QPushButton *m_pPBConnect;
+    QPushButton *m_pPBDisConnect;
     QHBoxLayout *m_pHBLPool;
 
     QLabel *m_pLBBalance;
@@ -67,27 +66,38 @@ private:
     QAction *m_pQAKorean;
 
     //work threads
-    XdagWalletProcessThread *m_pXdagWalletProcessThread;
+    XdagWalletProcessThread *m_pXdagThread;
 
     //password input dialog
     PwdDialog *m_pDLPwdType;
-    PwdDialog *m_pDLPwdReType;
-    PwdDialog *m_pDLRdmType;
+    ErrorDialog *m_pErrDlg;
 
     //translator
     QTranslator *m_pTranslator;
 
     XdagCommonDefine::EN_XDAG_UI_LANG mLanguage;
 
-    void InitWalletUpdateUI(UpdateUiInfo info);
+    void initUI();
+    void translateUI(XdagCommonDefine::EN_XDAG_UI_LANG lang);
+    void initWorkThread();
+    void initSignal();
+    void procUpdateUiInfo(UpdateUiInfo info);
+
 private slots:
-    void onButtonGoClicked();
+    void onXdagUpdateUI(UpdateUiInfo info);
+    void onXdagProcessStateChange(XDAG_PROCESS_STATE state);
+    void onXdagProcessFinished();
+    void onBtnConnectClicked();
+    void onBtnDisConnectClicked();
     void onButtonXferClicked();
     void onChangeLanguage(QAction *);
+    void onAuthRejected();
     void onPwdTyped(QString pwd);
     void onPwdSeted(QString pwd);
     void onPwdReTyped(QString pwd);
     void onRdmTyped(QString rdm);
+
+
 };
 
 #endif // QTWALLETMAIN_H

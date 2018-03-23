@@ -21,6 +21,8 @@ EXTERN int
 /* построение таблицы во внешнем массиве длины 256 двойных слов */
 	crc_makeTable	(unsigned table[256]);
 
+EXTERN void
+        crc_uninit(void);
 
 EXTERN unsigned
 

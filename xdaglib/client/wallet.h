@@ -29,6 +29,8 @@ extern struct xdag_public_key *xdag_wallet_our_keys(int *pnkeys);
 /* completes work with wallet */
 extern void xdag_wallet_finish(void);
 
+/* release wallet resource while program exit*/
+extern int xdag_wallet_uninit(void);
 #ifdef __cplusplus
 }
 #endif

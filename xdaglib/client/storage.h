@@ -33,6 +33,9 @@ extern int xdag_load_sums(xdag_time_t start_time, xdag_time_t end_time, struct x
 /* completes work with the storage */
 extern void xdag_storage_finish(void);
 
+/* release the resource storage used while program exit */
+extern void xdag_storage_uninit(void);
+
 #ifdef __cplusplus
 }
 #endif

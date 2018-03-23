@@ -35,9 +35,7 @@ extern int xdag_signal_init(void);
 extern int xdag_set_log_level(int level);
 
 /* app log start */
-extern int xdag_app_log_init();
 extern void xdag_app_log(en_xdag_app_log_level level,const char* file,int line,const char* format,...);
-extern void xdag_app_log_finish();
 extern int xdag_set_app_log_level(en_xdag_app_log_level level);
 /* app log end */
 

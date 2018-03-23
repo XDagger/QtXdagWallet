@@ -30,7 +30,7 @@ LIBS += -L$$PWD\win64_dependency\lib -lWS2_32
 LIBS += -L$$PWD\win64_dependency\lib -llegacy_stdio_definitions
 
 #QMAKE_CFLAGS += -DSHA256_USE_OPENSSL_TXFM -DSHA256_OPENSSL_MBLOCK -DHAVE_STRUCT_TIMESPEC -D_TIMESPEC_DEFINED -DDFSTOOLS -DCHEATCOIN -DNDEBUG -Wall
-QMAKE_CFLAGS +=-DHAVE_STRUCT_TIMESPEC -D_TIMESPEC_DEFINED -DDFSTOOLS -DCHEATCOIN -DNDEBUG -D_CRT_SECURE_NO_WARNINGS -Wall
+QMAKE_CFLAGS += -DHAVE_STRUCT_TIMESPEC -D_TIMESPEC_DEFINED -DDFSTOOLS -DCHEATCOIN -DNDEBUG -D_CRT_SECURE_NO_WARNINGS -Wall
 
 #QMAKE_CXXFLAGS += -DSHA256_USE_OPENSSL_TXFM -DSHA256_OPENSSL_MBLOCK -DHAVE_STRUCT_TIMESPEC -D_TIMESPEC_DEFINED -DDFSTOOLS -DCHEATCOIN -DNDEBUG -Wall
 QMAKE_CXXFLAGS += -DHAVE_STRUCT_TIMESPEC -D_TIMESPEC_DEFINED -DDFSTOOLS -DCHEATCOIN -DNDEBUG -D_CRT_SECURE_NO_WARNINGS -Wall
@@ -55,7 +55,9 @@ SOURCES +=\
     WalletMain.cpp \
     PwdDialog.cpp \
     WalletInitWidget.cpp \
-    PwdLineEdit.cpp
+    PwdLineEdit.cpp \
+    XdagMutex.cpp \
+    ErrorDialog.cpp
 
 HEADERS  += \
     XdagWalletProcessThread.h \
@@ -65,11 +67,14 @@ HEADERS  += \
     UiNotifyMessage.h \
     UpdateUiInfo.h \
     XdagCommonDefine.h \
-    PwdLineEdit.h
+    PwdLineEdit.h \
+    XdagMutex.h \
+    ErrorDialog.h
 
 FORMS    += qtwalletmain.ui \
     walletinitwidget.ui \
-    pwddialog.ui
+    pwddialog.ui \
+    errordialog.ui
 
 RESOURCES += \
     resource/resource.qrc
@@ -90,7 +95,13 @@ win32 {
         $$PWD/win64_dependency/dll/libssl32.dll \
         $$PWD/win64_dependency/dll/msvcr100.dll \
         $$PWD/win64_dependency/dll/pthreadVC2.dll \
-        $$PWD/win64_dependency/dll/ssleay32.dll
+        $$PWD/win64_dependency/dll/ssleay32.dll \
+        $$PWD/win64_dependency/dll/Qt5Core.dll \
+        $$PWD/win64_dependency/dll/Qt5Gui.dll \
+        $$PWD/win64_dependency/dll/Qt5Widgets.dll \
+
+    PLATFORM_DIC  += $$PWD/win64_dependency/dll/platforms
+    PLATFORM_DIC ~= s,/,\\,g
 
     EXTRA_BINFILES_WIN = $${EXTRA_BINFILES}
     EXTRA_BINFILES_WIN ~= s,/,\\,g
@@ -100,13 +111,18 @@ win32 {
         OBJECTS_DIR = $$PWD\debug
         MOC_DIR = $$PWD\debug
         TARGET = xdagwallet
-        QMAKE_CLEAN += $$DESTDIR\*.pdb $$DESTDIR\*.dll $$DESTDIR\*.exe
+        QMAKE_CLEAN += $$DESTDIR\*.pdb $$DESTDIR\*.dll $$DESTDIR\*.exe $$DESTDIR\platforms\*.dll
+        QMAKE_CLEAN += $$DESTDIR\*.*
 
 
         DEBUG_DESTDIR_WIN = $${DESTDIR}
+        DEBUG_DESTDIR_WIN_PLATFORM = $${DESTDIR}/platforms
         DEBUG_DESTDIR_WIN ~= s,/,\\,g
+        DEBUG_DESTDIR_WIN_PLATFORM ~= s,/,\\,g
+        QMAKE_POST_LINK +=$$quote(if not exist $${DEBUG_DESTDIR_WIN_PLATFORM} mkdir $${DEBUG_DESTDIR_WIN_PLATFORM}$$escape_expand(\n\t))
+        QMAKE_POST_LINK +=$$quote(xcopy/e/r/h/y $${PLATFORM_DIC} $${DEBUG_DESTDIR_WIN_PLATFORM}$$escape_expand(\n\t))
         for(FILE,EXTRA_BINFILES_WIN){
-            QMAKE_POST_LINK +=$$quote(cmd /c copy /y $${FILE} $${DEBUG_DESTDIR_WIN}$$escape_expand(\n\t))
+            QMAKE_POST_LINK +=$$quote(copy $${FILE} $${DEBUG_DESTDIR_WIN}$$escape_expand(\n\t))
         }
     }
 
@@ -115,13 +131,18 @@ win32 {
         OBJECTS_DIR = $$PWD\release
         MOC_DIR = $$PWD\release
         TARGET = xdagwallet
-        QMAKE_CLEAN += $$DESTDIR\*.pdb $$DESTDIR\*.dll $$DESTDIR\*.exe
+        QMAKE_CLEAN += $$DESTDIR\*.pdb $$DESTDIR\*.dll $$DESTDIR\*.exe $$DESTDIR\platforms\*.dll
 
         RELEASE_DESTDIR_WIN = $${DESTDIR}
+        RELEASE_DESTDIR_WIN_PLATFORM = $${DESTDIR}/platforms
         RELEASE_DESTDIR_WIN ~= s,/,\\,g
+        RELEASE_DESTDIR_WIN_PLATFORM ~= s,/,\\,g
+        QMAKE_POST_LINK +=$$quote(if not exist $${RELEASE_DESTDIR_WIN_PLATFORM} mkdir $${RELEASE_DESTDIR_WIN_PLATFORM}$$escape_expand(\n\t))
+        QMAKE_POST_LINK +=$$quote(xcopy/e/r/h/y $${PLATFORM_DIC} $${RELEASE_DESTDIR_WIN_PLATFORM}$$escape_expand(\n\t))
         for(FILE,EXTRA_BINFILES_WIN){
-            QMAKE_POST_LINK +=$$quote(cmd /c copy /y $${FILE} $${RELEASE_DESTDIR_WIN}$$escape_expand(\n\t))
+            QMAKE_POST_LINK +=$$quote(copy $${FILE} $${RELEASE_DESTDIR_WIN}$$escape_expand(\n\t))
         }
+
     }
 
 }

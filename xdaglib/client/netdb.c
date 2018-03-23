@@ -336,3 +336,9 @@ void xdag_netdb_finish(void)
 {
 	pthread_mutex_lock(&host_mutex);
 }
+
+/* release wallet resource while program exit */
+void xdag_netdb_uninit(void)
+{
+        //TODO: release resource netdb used
+}

@@ -14,6 +14,18 @@
 
 static QObject *gCallBackObject;
 
+typedef enum tag_XDAG_PROCESS_STATE{
+    XDAG_PROCESS_START,
+    XDAG_PROCESS_CONNECTING,
+    XDAG_PROCESS_CONNECTED,
+    XDAG_PROCESS_CONN_TIMEOUT,
+    XDAG_PROCESS_BLOCK_TRANSFERING,
+    XDAG_PROCESS_BLOCK_TRANSFERED,
+    XDAG_PROCESS_STOP
+}XDAG_PROCESS_STATE;
+
+Q_DECLARE_METATYPE(XDAG_PROCESS_STATE)
+
 class XdagWalletProcessThread : public QThread
 {
     Q_OBJECT
@@ -21,6 +33,13 @@ class XdagWalletProcessThread : public QThread
 public:
     explicit XdagWalletProcessThread(QObject *parent);
     ~XdagWalletProcessThread();
+
+    void Stop();
+    void Start();
+    bool isStopped();
+
+    //move transation state
+    void moveStateTo(XDAG_PROCESS_STATE state);
 
     void setPoolAddr(const char* poolAddr);
     const char* getPoolAddr(void);
@@ -31,17 +50,14 @@ public:
     void setMsgMap(QMap<QString,QString> *map);
     QMap<QString,QString>* getMsgMap();
 
-    void setCondPwdTyped(QWaitCondition *cond);
-    void setCondPwdSeted(QWaitCondition *cond);
-    void setCondPwdReTyped(QWaitCondition *cond);
-    void setCondRdmTyped(QWaitCondition *cond);
-    void setCondUiNotified(QWaitCondition *cond);
+    void setCondAuthTyped(QWaitCondition *cond);
+    QWaitCondition* getCondAuthTyped(void);
 
-    QWaitCondition* getCondPwdTyped(void);
-    QWaitCondition* getCondPwdSeted(void);
-    QWaitCondition* getCondPwdReTyped(void);
-    QWaitCondition* getCondRdmTyped(void);
-    QWaitCondition* getCondUiNotified(void);
+    void setCondUiNotified(QWaitCondition *cond);
+    QWaitCondition* getCondUiNotified();
+
+    void waitAuthTyped();
+    void wakeAuthTyped();
 
     void setMsgQueue(QQueue<UiNotifyMessage> *msgQueue);
 
@@ -51,39 +67,26 @@ public:
     //for xdag library call back
     static st_xdag_app_msg* XdagWalletProcessCallback(const void *call_back_object,st_xdag_event *event);
 
+    //get state string
+    static QString getProcessStateString(XDAG_PROCESS_STATE state);
+
     //process ui notify message
     void processUiNotifyMessage(UiNotifyMessage &msg);
-
-    //stop the thread
-    void stop();
-
-    void waitPasswdTyped();
-    void wakePasswdTyped();
-    void waitPasswdSeted();
-    void wakePasswdSeted();
-    void waitPasswdRetyped();
-    void wakePasswdRetyped();
-    void waitRdmTyped();
-    void wakeRdmTyped();
-
 protected:
     virtual void run();
 
-signals:
-    //emit wallet process signal
-    void XdagWalletProcessSignal(UpdateUiInfo info);
+Q_SIGNALS:
+    //emit wallet update ui signal
+    void updateUI(UpdateUiInfo info);
+
+    //emit process state change signal
+    void stateChange(XDAG_PROCESS_STATE state);
 
 private:
     //Mutex Lock
     QMutex *m_pMutex;
-    //Condition wait password typed
-    QWaitCondition *m_pCondPwdTyped;
-    //Condition wait password seted
-    QWaitCondition *m_pCondPwdSeted;
-    //Condition wait password re-typed
-    QWaitCondition *m_pCondPwdReTyped;
-    //Condition wait password re-typed
-    QWaitCondition *m_pCondRdmTyped;
+    //Condition wait Authentication information typed
+    QWaitCondition *m_pCondAuthTyped;
     //Condition wait ui notify
     QWaitCondition *m_pUiNotified;
 
@@ -94,10 +97,13 @@ private:
     QQueue<UiNotifyMessage> *m_pMsgQueue;
 
     //flag is need stop
-    bool m_bNeedStopped;
+    bool m_bStopped;
 
     //pool addr
     QString mPoolAddr;
+
+    //current state
+    XDAG_PROCESS_STATE mProcessState;
 };
 
 #endif // WALLETINITTHREAD_H

@@ -60,10 +60,6 @@ void xdag_free_app_msg(st_xdag_app_msg* msg){
     }
 }
 
-void xdag_wrapper_log_init(){
-    xdag_app_log_init();
-}
-
 const char* xdag_get_version(){
     return XDAG_VERSION;
 }
@@ -76,6 +72,32 @@ void xdag_wrapper_init(const void* callback_object,
 
 void xdag_send_coin(const char* amount,const char* address){
     xdag_xfer_coin(amount,address);
+}
+
+void report_ui_walletinit_event(en_xdag_event_type event_type,const char* err_msg){
+
+    st_xdag_event event;
+    memset(&event,0,sizeof(st_xdag_event));
+    event.event_type = event_type;
+    event.procedure_type = en_procedure_init_wallet;
+
+    if(err_msg)
+        strncpy(event.error_msg,err_msg,strlen(err_msg));
+
+    g_app_callback_func(g_callback_object,&event);
+}
+
+void report_ui_xfer_event(en_xdag_event_type event_type,const char* err_msg){
+
+    st_xdag_event event;
+    memset(&event,0,sizeof(st_xdag_event));
+    event.event_type = event_type;
+    event.procedure_type = en_procedure_xfer_coin;
+
+    if(err_msg)
+        strncpy(event.error_msg,err_msg,strlen(err_msg));
+
+    g_app_callback_func(g_callback_object,&event);
 }
 
 void xdag_wrapper_uninit(){

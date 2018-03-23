@@ -23,18 +23,18 @@ static EC_GROUP *group;
 // initialization of the encryption system
 int xdag_crypt_init(int withrandom)
 {
-	if (withrandom) {
-		uint64_t buf[64];
+    if (withrandom) {
+        uint64_t buf[64];
         //xOPENSSL_ia32_cpuid(xOPENSSL_ia32cap_P);
-		xdag_generate_random_array(buf, sizeof(buf));
-		xdag_debug("Seed  : [%s]", xdag_log_array(buf, sizeof(buf)));
-		RAND_seed(buf, sizeof(buf));
-	}
+        xdag_generate_random_array(buf, sizeof(buf));
+        xdag_debug("Seed  : [%s]", xdag_log_array(buf, sizeof(buf)));
+        RAND_seed(buf, sizeof(buf));
+    }
 
-	group = EC_GROUP_new_by_curve_name(NID_secp256k1);
-	if (!group) return -1;
-	
-	return 0;
+    group = EC_GROUP_new_by_curve_name(NID_secp256k1);
+    if (!group) return -1;
+
+    return 0;
 }
 
 /* creates a new pair of private and public keys

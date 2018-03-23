@@ -5,10 +5,7 @@
 
 #include <QMessageBox>
 #include <QDialog>
-QWaitCondition g_condPwdTyped;
-QWaitCondition g_condPwdSeted;
-QWaitCondition g_condPwdReTyped;
-QWaitCondition g_condRdmTyped;
+QWaitCondition g_condAuthTyped;
 QWaitCondition g_condUiNotified;
 QMutex g_Mutex;
 QMap<QString,QString> g_MsgMap;
@@ -24,13 +21,13 @@ QQueue<UiNotifyMessage> g_MsgQueue;
 #define ADRESS_LINEEDIT_LEN 200
 #define QLABEL_LEN 60
 #define QLABLE_HEIGHT 25
-#define QPUSHBUTTON_LEN     60
+#define QPUSHBUTTON_LEN     80
 #define QPUSHBUTTON_HEIGHT  25
 
 
 QtWalletMain::QtWalletMain(QWidget *parent) :
     QMainWindow(parent),
-    m_pDLPwdType(NULL),m_pDLPwdReType(NULL),m_pDLRdmType(NULL),
+    m_pDLPwdType(NULL),
     ui(new Ui::QtWalletMain)
 {
     initUI();
@@ -70,6 +67,7 @@ void QtWalletMain::initUI()
     m_pLEBalance = new QLineEdit(tr("Not Ready"));
     m_pLBAccount = new QLabel(tr("Account"));
     m_pLEAccount = new QLineEdit(tr("Not Ready"));
+    m_pPBDisConnect = new QPushButton(tr("DisConnect"));
 
     m_pLBBalance->setAlignment(Qt::AlignLeft| Qt::AlignVCenter);
     m_pLBBalance->setFixedSize(QLABEL_LEN,QLABLE_HEIGHT);
@@ -79,6 +77,10 @@ void QtWalletMain::initUI()
     m_pLBAccount->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     m_pLEBalance->setFixedSize(AMOUNT_LINEEDIT_LEN,QLINE_EDIT_HEIGHT);
     m_pLEAccount->setFixedSize(ADRESS_LINEEDIT_LEN,QLINE_EDIT_HEIGHT);
+    m_pPBDisConnect->setFixedSize(QPUSHBUTTON_LEN,QPUSHBUTTON_HEIGHT);
+    m_pPBDisConnect->setEnabled(false);
+    m_pLEAccount->setFocusPolicy(Qt::NoFocus);
+    m_pLEBalance->setFocusPolicy(Qt::NoFocus);
     m_pHBLAccount = new QHBoxLayout;
     m_pHBLAccount->setSpacing(0);
     m_pHBLAccount->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
@@ -86,6 +88,7 @@ void QtWalletMain::initUI()
     m_pHBLAccount->addWidget(m_pLEBalance);
     m_pHBLAccount->addWidget(m_pLBAccount);
     m_pHBLAccount->addWidget(m_pLEAccount);
+    m_pHBLAccount->addWidget(m_pPBDisConnect);
 
     m_pLBTransfer = new QLabel(tr("Transfer"));
     m_pLESendAmount = new QLineEdit("");
@@ -102,6 +105,7 @@ void QtWalletMain::initUI()
     m_pLESendAmount->setFixedSize(AMOUNT_LINEEDIT_LEN,QLINE_EDIT_HEIGHT);
     m_pLERecvAddress->setFixedSize(ADRESS_LINEEDIT_LEN,QLINE_EDIT_HEIGHT);
     m_pPBXfer->setFixedSize(QPUSHBUTTON_LEN,QPUSHBUTTON_HEIGHT);
+    m_pPBXfer->setEnabled(false);
     m_pHBLTransfer = new QHBoxLayout;
     m_pHBLTransfer->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     m_pHBLTransfer->setSpacing(0);
@@ -143,7 +147,7 @@ void QtWalletMain::initUI()
 
     m_pTranslator = new QTranslator;
 
-    setFixedSize(500,160);
+    setFixedSize(520,160);
 }
 
 void QtWalletMain::translateUI(XdagCommonDefine::EN_XDAG_UI_LANG lang)
@@ -183,6 +187,7 @@ void QtWalletMain::translateUI(XdagCommonDefine::EN_XDAG_UI_LANG lang)
         setWindowTitle(tr("Dagger Wallet(XDAG)"));
         m_pLBPool->setText(tr("Pool"));
         m_pPBConnect->setText(tr("Connect"));
+        m_pPBDisConnect->setText(tr("DisConnect"));
 
         m_pLBBalance->setText(tr("Balance"));
         m_pLBAccount->setText(tr("Account"));
@@ -195,56 +200,68 @@ void QtWalletMain::translateUI(XdagCommonDefine::EN_XDAG_UI_LANG lang)
 }
 
 void QtWalletMain::initWorkThread(){
-    m_pXdagWalletProcessThread = new XdagWalletProcessThread(this);
+    m_pXdagThread = new XdagWalletProcessThread(this);
 
-    m_pXdagWalletProcessThread->setMutex(&g_Mutex);
-    m_pXdagWalletProcessThread->setCondPwdTyped(&g_condPwdTyped);
-    m_pXdagWalletProcessThread->setCondPwdSeted(&g_condPwdSeted);
-    m_pXdagWalletProcessThread->setCondPwdReTyped(&g_condPwdReTyped);
-    m_pXdagWalletProcessThread->setCondRdmTyped(&g_condRdmTyped);
-    m_pXdagWalletProcessThread->setCondUiNotified(&g_condUiNotified);
+    m_pXdagThread->setMutex(&g_Mutex);
+    m_pXdagThread->setCondAuthTyped(&g_condAuthTyped);
+    m_pXdagThread->setCondUiNotified(&g_condUiNotified);
 
-    m_pXdagWalletProcessThread->setMsgMap(&g_MsgMap);
-    m_pXdagWalletProcessThread->setMsgQueue(&g_MsgQueue);
+    m_pXdagThread->setMsgMap(&g_MsgMap);
+    m_pXdagThread->setMsgQueue(&g_MsgQueue);
 
 }
 
 void QtWalletMain::initSignal()
 {
-    //connect wallet init signal and slot
-    connect(m_pPBConnect,&QPushButton::clicked,this,&QtWalletMain::onButtonGoClicked);
+    //connect button click signal and slot
+    connect(m_pPBConnect,&QPushButton::clicked,this,&QtWalletMain::onBtnConnectClicked);
+    connect(m_pPBDisConnect,&QPushButton::clicked,this,&QtWalletMain::onBtnDisConnectClicked);
     connect(m_pPBXfer,&QPushButton::clicked,this,&QtWalletMain::onButtonXferClicked);
 
-    //connect wallet init thread signal and ui slot
-    connect(m_pXdagWalletProcessThread,&XdagWalletProcessThread::XdagWalletProcessSignal,this,&QtWalletMain::InitWalletUpdateUI);
+    //connect xdag and ui slot
+    connect(m_pXdagThread,&XdagWalletProcessThread::updateUI,this,&QtWalletMain::onXdagUpdateUI);
+    connect(m_pXdagThread,&XdagWalletProcessThread::stateChange,this,&QtWalletMain::onXdagProcessStateChange);
+    connect(m_pXdagThread,&XdagWalletProcessThread::finished,this,&QtWalletMain::onXdagProcessFinished);
 
     //change language
     connect(m_pQMLanguage,SIGNAL(triggered(QAction *)),this,SLOT(onChangeLanguage(QAction *)));
 
     qRegisterMetaType<UpdateUiInfo>();
     qRegisterMetaType<UiNotifyMessage>();
+    qRegisterMetaType<XDAG_PROCESS_STATE>();
 }
 
-void QtWalletMain::onButtonGoClicked()
+void QtWalletMain::onBtnConnectClicked()
 {
-    m_pXdagWalletProcessThread->setPoolAddr(m_pLEPool->text().toStdString().c_str());
-    //init wallet use wallet init thread
-    if(!m_pXdagWalletProcessThread->isRunning()){
-        m_pXdagWalletProcessThread->start();
+    m_pXdagThread->setPoolAddr(m_pLEPool->text().toStdString().c_str());
+    //start xdag process thread
+    if(m_pXdagThread->isStopped()){
+        m_pPBConnect->setEnabled(false);
+        m_pXdagThread->start();
+    }
+}
+
+void QtWalletMain::onBtnDisConnectClicked()
+{
+    //stop the xdag thread
+    if(!m_pXdagThread->isStopped()){
+        m_pPBDisConnect->setEnabled(false);
+        m_pXdagThread->requestInterruption();
+        g_condUiNotified.wakeAll();
     }
 }
 
 void QtWalletMain::onButtonXferClicked()
 {
     //do xfer coin notify user connect the pool first
-    if(!m_pXdagWalletProcessThread->isRunning()){
-        m_pXdagWalletProcessThread->start();
+    if(!m_pXdagThread->isRunning()){
+        m_pXdagThread->Start();
     }
 
     UiNotifyMessage msg;
     msg.msgType = UiNotifyMessage::EN_DO_XFER_XDAG;
-    msg.account = strdup(m_pLEAccount->text().toStdString().c_str());
-    msg.amount = strdup(m_pLEAccount->text().toStdString().c_str());
+    msg.account = strdup(m_pLERecvAddress->text().toStdString().c_str());
+    msg.amount = strdup(m_pLESendAmount->text().toStdString().c_str());
     msg.msgFromThreadId = QThread::currentThreadId();
 
     g_MsgQueue.push_back(msg);
@@ -276,6 +293,12 @@ void QtWalletMain::onChangeLanguage(QAction *action)
     translateUI(lang);
 }
 
+//user reject type in auth info will terminate the xdag process thread
+void QtWalletMain::onAuthRejected()
+{
+    qDebug() <<  " auth rejected ";
+    m_pXdagThread->wakeAuthTyped();
+}
 
 void QtWalletMain::onPwdTyped(QString pwd)
 {
@@ -286,7 +309,7 @@ void QtWalletMain::onPwdTyped(QString pwd)
         m_pDLPwdType->closeDialog();
         m_pDLPwdType = NULL;
     }
-    m_pXdagWalletProcessThread->wakePasswdTyped();
+    m_pXdagThread->wakeAuthTyped();
 }
 
 void QtWalletMain::onPwdSeted(QString pwd)
@@ -298,7 +321,7 @@ void QtWalletMain::onPwdSeted(QString pwd)
         m_pDLPwdType->closeDialog();
         m_pDLPwdType = NULL;
     }
-    m_pXdagWalletProcessThread->wakePasswdSeted();
+    m_pXdagThread->wakeAuthTyped();
 }
 
 void QtWalletMain::onPwdReTyped(QString pwd)
@@ -310,7 +333,7 @@ void QtWalletMain::onPwdReTyped(QString pwd)
         m_pDLPwdType->closeDialog();
         m_pDLPwdType = NULL;
     }
-    m_pXdagWalletProcessThread->wakePasswdRetyped();
+    m_pXdagThread->wakeAuthTyped();
 }
 
 void QtWalletMain::onRdmTyped(QString pwd)
@@ -322,48 +345,206 @@ void QtWalletMain::onRdmTyped(QString pwd)
         m_pDLPwdType->closeDialog();
         m_pDLPwdType = NULL;
     }
-    m_pXdagWalletProcessThread->wakeRdmTyped();
+    m_pXdagThread->wakeAuthTyped();
 
 }
 
-void QtWalletMain::InitWalletUpdateUI(UpdateUiInfo info){
+void QtWalletMain::onXdagUpdateUI(UpdateUiInfo info){
 
     switch(info.event_type){
-
+        //request ui type in password or rdm
         case en_event_type_pwd:
             m_pDLPwdType = new PwdDialog(0,DLG_TYPE_PWD);
-            connect(m_pDLPwdType,SIGNAL(sendPwd(QString)),this,SLOT(onPwdTyped(QString)));
-            m_pDLPwdType->show();
+            connect(m_pDLPwdType,SIGNAL(sendTypePwd(QString)),this,SLOT(onPwdTyped(QString)));
+            connect(m_pDLPwdType,SIGNAL(rejected()),this,SLOT(onAuthRejected()));
+            m_pDLPwdType->exec();
         break;
 
         case en_event_set_pwd:
             m_pDLPwdType = new PwdDialog(0,DLG_SET_PWD);
             connect(m_pDLPwdType,SIGNAL(sendSetPwd(QString)),this,SLOT(onPwdSeted(QString)));
-            m_pDLPwdType->show();
+            connect(m_pDLPwdType,SIGNAL(rejected()),this,SLOT(onAuthRejected()));
+            m_pDLPwdType->exec();
         break;
 
         case en_event_retype_pwd:
             m_pDLPwdType = new PwdDialog(0,DLG_RETYPE_PWD);
             connect(m_pDLPwdType,SIGNAL(sendRetypePwd(QString)),this,SLOT(onPwdReTyped(QString)));
-            m_pDLPwdType->show();
+            connect(m_pDLPwdType,SIGNAL(rejected()),this,SLOT(onAuthRejected()));
+            m_pDLPwdType->exec();
         break;
 
         case en_event_set_rdm:
             m_pDLPwdType = new PwdDialog(0,DLG_TYPE_RDM);
             connect(m_pDLPwdType,SIGNAL(sendRdm(QString)),this,SLOT(onRdmTyped(QString)));
-            m_pDLPwdType->show();
+            connect(m_pDLPwdType,SIGNAL(rejected()),this,SLOT(onAuthRejected()));
+            m_pDLPwdType->exec();
+        break;
+
+        //notify error
+        case en_event_pwd_error:
+        case en_event_pwd_not_same:
+        case en_event_pwd_format_error:
+        case en_event_nothing_transfer:
+        case en_event_balance_too_small:
+        case en_event_invalid_recv_address:
+        {
+            m_pErrDlg = new ErrorDialog(0,info.event_type);
+            m_pErrDlg->exec();
+        }
+        break;
+        //pool thread error quit the pool thread
+        case en_event_cannot_create_block:
+        case en_event_cannot_find_block:
+        case en_event_cannot_load_block:
+        case en_event_cannot_create_socket:
+        case en_event_host_is_not_given:
+        case en_event_cannot_reslove_host:
+        case en_event_port_is_not_given:
+        case en_event_cannot_connect_to_pool:
+        case en_event_socket_isclosed:
+        case en_event_socket_hangup:
+        case en_event_socket_error:
+        case en_event_read_socket_error:
+        case en_event_write_socket_error:
+        {
+            //just show error do not block
+            m_pErrDlg = new ErrorDialog(0,info.event_type);
+            m_pErrDlg->show();
+
+            //wake and quit the xdag process thread
+            m_pXdagThread->requestInterruption();
+            g_condUiNotified.wakeAll();
+        }
         break;
 
         //update ui info
         case en_event_update_state:
-            m_pLEAccount->clear();
-            m_pLEBalance->clear();
-            ui->statusBar->clearMessage();
-            m_pLEAccount->setText(info.address);
-            m_pLEBalance->setText(info.balance);
-            ui->statusBar->showMessage(info.state);
+            procUpdateUiInfo(info);
         break;
     }
+}
+
+void QtWalletMain::procUpdateUiInfo(UpdateUiInfo info){
+    m_pLEAccount->clear();
+    m_pLEBalance->clear();
+    ui->statusBar->clearMessage();
+
+    //not initialized
+    if(info.xdag_program_state == NINT){
+        qDebug() << " wallet uninited ";
+        m_pPBConnect->setEnabled(true);
+        m_pPBDisConnect->setEnabled(false);
+        m_pPBXfer->setEnabled(false);
+        m_pLEBalance->setText(tr("Not Ready"));
+        m_pLEAccount->setText(tr("Not Ready"));
+        m_pLESendAmount->clear();
+        m_pLERecvAddress->clear();
+    }
+
+    //not connected to the pool
+    if(info.xdag_program_state >= INIT
+            && info.xdag_program_state <= TRYP){
+        m_pPBConnect->setEnabled(false);
+        m_pPBXfer->setEnabled(false);
+    }
+
+    //already connected to the pool
+    if(info.xdag_program_state >= CTST){
+        m_pPBConnect->setEnabled(false);
+        m_pPBDisConnect->setEnabled(true);
+
+        //address or balance not ready
+        if(info.address_state <= en_address_not_ready ||
+                info.balance_state <= en_balance_not_ready){
+            m_pPBXfer->setEnabled(false);
+        }else{
+            m_pPBXfer->setEnabled(true);
+        }
+    }
+
+    if(info.balance_state == en_balance_not_ready){
+        m_pLEBalance->setText(tr("Not Ready"));
+    }else{
+        m_pLEBalance->setText(info.balance);
+    }
+
+    if(info.address_state == en_address_not_ready){
+        m_pLEAccount->setText(tr("Not Ready"));
+    }else{
+        m_pLEAccount->setText(info.address);
+    }
+
+    ui->statusBar->showMessage(getXdagProgramState(info.xdag_program_state));
+}
+/*
+    process the xdag process thread state change
+    just process the following state at present:
+    XDAG_PROCESS_START,
+    XDAG_PROCESS_STOP
+*/
+void QtWalletMain::onXdagProcessStateChange(XDAG_PROCESS_STATE state)
+{
+    switch(state){
+        case XDAG_PROCESS_START:
+            m_pPBConnect->setEnabled(false);
+        break;
+        case XDAG_PROCESS_STOP:
+            m_pPBConnect->setEnabled(true);
+        break;
+    }
+}
+
+void QtWalletMain::onXdagProcessFinished()
+{
+    qDebug() << " xdag process finished";
+    m_pPBConnect->setEnabled(true);
+}
+
+QString QtWalletMain::getXdagProgramState(en_xdag_program_state state)
+{
+    switch(state){
+        case NINT:
+        return "";
+        case INIT:
+        return tr("Initializing.");
+        case KEYS:
+        return tr("Generating keys...");
+        case REST:
+        return tr("The local storage is corrupted. Resetting blocks engine.");
+        case LOAD:
+        return tr("Loading blocks from the local storage.");
+        case STOP:
+        return tr("Blocks loaded. Waiting for 'run' command.");
+        case WTST:
+        return tr("Trying to connect to the test network.");
+        case WAIT:
+        return tr("Trying to connect to the main network.");
+        case TTST:
+        return tr("Trying to connect to the testnet pool.");
+        case TRYP:
+        return tr("Trying to connect to the mainnet pool.");
+        case CTST:
+        return tr("Connected to the test network. Synchronizing.");
+        case CONN:
+        return tr("Connected to the main network. Synchronizing.");
+        case XFER:
+        return tr("Waiting for transfer to complete.");
+        case PTST:
+        return tr("Connected to the testnet pool. No mining.");
+        case POOL:
+        return tr("Connected to the mainnet pool. No mining.");
+        case MTST:
+        return tr("Connected to the testnet pool. Mining on. Normal testing.");
+        case MINE:
+        return tr("Connected to the mainnet pool. Mining on. Normal operation.");
+        case STST:
+        return tr("Synchronized with the test network. Normal testing.");
+        case SYNC:
+        return tr("Synchronized with the main network. Normal operation.");
+    }
+
+    return tr("Initializing.");
 }
 
 

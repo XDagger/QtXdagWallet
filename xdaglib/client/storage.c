@@ -327,3 +327,10 @@ void xdag_storage_finish(void)
 {
 	pthread_mutex_lock(&storage_mutex);
 }
+
+/* release the resource storage used while program exit */
+void xdag_storage_uninit(void)
+{
+        //TODO: release the resource storage used
+
+}

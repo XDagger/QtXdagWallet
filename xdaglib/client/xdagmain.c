@@ -67,7 +67,7 @@ const char *g_progname = "xdagwallet";
 
 //global statistical variable
 int g_xdag_run = 0;
-int g_xdag_state = XDAG_STATE_INIT;
+int g_xdag_state = XDAG_STATE_NINT;
 int g_xdag_testnet = 0;
 int g_is_miner = 0;
 static int g_is_pool = 0;
@@ -270,21 +270,9 @@ static const char *get_state(void)
 	return states[g_xdag_state];
 }
 
-static inline report_ui_xfer_event(en_xdag_event_type event_type,const char* err_msg){
-
-    st_xdag_event event;
-    memset(&event,0,sizeof(st_xdag_event));
-    event.event_type = event_type;
-    event.procedure_type = en_procedure_xfer_coin;
-
-    if(err_msg)
-        strncpy(event.error_msg,err_msg,strlen(err_msg));
-
-    g_app_callback_func(g_callback_object,&event);
-}
-
 int xdag_xfer_coin(const char* amount,const char* address){
 
+    uint32_t pwd[4];
     struct xfer_callback_data xfer;
 
     memset(&xfer, 0, sizeof(xfer));
@@ -296,23 +284,21 @@ int xdag_xfer_coin(const char* amount,const char* address){
     }
 
     if (xfer.remains > xdag_get_balance(0)) {
-        report_ui_xfer_event(en_event_nothing_transfer,"balance too small");
+        report_ui_xfer_event(en_event_balance_too_small,"balance too small");
         return 1;
     }
 
     if (xdag_address2hash(address, xfer.fields[XFER_MAX_IN].hash)) {
-        report_ui_xfer_event(en_event_incorrect_address,"incorrect address");
+        report_ui_xfer_event(en_event_invalid_recv_address,"incorrect address");
         return 1;
     }
 
     /* ask user type in password */
-#if 0
-    if (out == stdout ? xdag_user_crypt_action(0, 0, 0, 3) : (ispwd ? xdag_user_crypt_action(pwd, 0, 4, 5) : 1)) {
-        sleep(3);
+    if (xdag_user_crypt_action(0, 0, 0, 3)) {
+        //sleep(3);
         report_ui_xfer_event(en_event_pwd_error,"password error");
         return 1;
     }
-#endif
 
     xdag_wallet_default_key(&xfer.keys[XFER_MAX_IN]);
     xfer.outsig = 1;
@@ -409,14 +395,15 @@ void xdag_global_init(){
     g_xdag_run = 1;
     g_is_miner = 1;
     g_is_pool = 0;
+    g_xdag_state = XDAG_STATE_INIT;
 }
 
 int xdag_main(const char *pool_arg)
 {
     const char *addrports[256], *bindto = 0, *pubaddr = 0, *miner_address = 0;
-	char *ptr;
-	int transport_flags = 0, n_addrports = 0, n_mining_threads = 0, is_pool = 0, is_miner = 0, i, level;
-	pthread_t th;
+    char *ptr;
+    int transport_flags = 0, n_addrports = 0, n_mining_threads = 0, is_pool = 0, is_miner = 0, i, level;
+    pthread_t th;
 
 //ignore some linux signals to avoid terminate
 #if !defined(_WIN32) && !defined(_WIN64)
@@ -429,49 +416,75 @@ int xdag_main(const char *pool_arg)
 
     xdag_show_state(0);
 
-	if (pubaddr && !bindto) {
-		char str[64], *p = strchr(pubaddr, ':');
-		if (p) {
-			sprintf(str, "0.0.0.0%s", p); bindto = strdup(str);
-		}
-	}
+    if (pubaddr && !bindto) {
+        char str[64], *p = strchr(pubaddr, ':');
+        if (p) {
+            sprintf(str, "0.0.0.0%s", p); bindto = strdup(str);
+        }
+    }
 
-	memset(&g_xdag_stats, 0, sizeof(g_xdag_stats));
-	memset(&g_xdag_extstats, 0, sizeof(g_xdag_extstats));
+    memset(&g_xdag_stats, 0, sizeof(g_xdag_stats));
+    memset(&g_xdag_extstats, 0, sizeof(g_xdag_extstats));
 
     xdag_app_mess("Starting %s, version %s", g_progname, XDAG_VERSION);
 	
     xdag_app_mess("Starting synchonization engine...");
-	if (xdag_sync_init()) return -1;
+    if (xdag_sync_init()){
+        xdag_app_err(" xdag sync init error ");
+        return -1;
+    }
 	
     xdag_app_mess("Starting dnet transport...");
-	printf("Transport module: ");
-	if (xdag_transport_start(transport_flags, bindto, n_addrports, addrports)) return -1;
+    xdag_app_mess("Transport module: ");
+    if (xdag_transport_start(transport_flags, bindto, n_addrports, addrports)){
+        xdag_app_err(" xdag transport start error ");
+        return -1;
+    }
 	
     xdag_app_mess("Initializing log system...");
-    if (xdag_signal_init()) return -1;
+    if (xdag_signal_init()){
+        xdag_app_err(" xdag signal init error ");
+        return -1;
+    }
 	
     xdag_app_mess("Initializing cryptography...");
-	if (xdag_crypt_init(1)) return -1;
+    if (xdag_crypt_init(1)){
+        xdag_app_err(" xdag signal init error ");
+        return -1;
+    }
 	
     xdag_app_mess("Reading wallet...");
-	if (xdag_wallet_init()) return -1;
+    if (xdag_wallet_init()){
+        xdag_app_err(" xdag wallet init error ");
+        return -1;
+    }
 	
     xdag_app_mess("Initializing addresses...");
-	if (xdag_address_init()) return -1;
+    if (xdag_address_init()){
+        xdag_app_err(" xdag address init error ");
+        return -1;
+    }
 	
     xdag_app_mess("Starting blocks engine...");
-	if (start_regular_block_thread(0,-1)) return -1;
+    if (start_regular_block_thread(0,-1)){
+        xdag_app_err(" xdag start regular block thread error ");
+        return -1;
+    }
 	
     xdag_app_mess("Starting pool engine...");
-	if (xdag_start_wallet_mainthread(pool_arg)) return -1;
+    if (xdag_start_wallet_mainthread(pool_arg)){
+        xdag_app_err(" xdag start wallet main thread error ");
+        return -1;
+    }
 
-	return 0;
+    return 0;
 }
 
 void xdag_show_state(xdag_hash_t hash)
 {
     char balance[64] , address[64], state[256];
+    en_balance_load_state balance_state = en_balance_ready;
+    en_address_load_state address_state = en_address_ready;
 
     memset(balance,0,64);
     memset(address,0,64);
@@ -479,14 +492,20 @@ void xdag_show_state(xdag_hash_t hash)
 
     if (!g_app_callback_func)
         return -1;
-    if (g_xdag_state < XDAG_STATE_XFER)
+
+    if (g_xdag_state < XDAG_STATE_XFER){
+        balance_state = en_balance_not_ready;
         strcpy(balance, "Not ready");
-    else
+    }else{
         sprintf(balance, "%.9Lf", amount2cheatcoins(xdag_get_balance(0)));
-    if (!hash)
+    }
+
+    if (g_xdag_state < XDAG_STATE_NINT || !hash){
+        address_state = en_address_not_ready;
         strcpy(address, "Not ready");
-    else
+    }else{
         strcpy(address, xdag_hash2address(hash));
+    }
 
     strcpy(state, get_state());
 
@@ -496,6 +515,10 @@ void xdag_show_state(xdag_hash_t hash)
     memset(&event,0,sizeof(st_xdag_event));
     event.procedure_type = en_procedure_init_wallet;
     event.event_type = en_event_update_state;
+    event.xdag_program_state = g_xdag_state;
+    event.xdag_balance_state = balance_state;
+    event.xdag_address_state = address_state;
+
     strcpy(event.address,address);
     strcpy(event.balance,balance);
     strcpy(event.state,state);
@@ -506,9 +529,15 @@ void xdag_show_state(xdag_hash_t hash)
 }
 
 void xdag_uninit(){
-    xdag_wallet_finish();
-    xdag_netdb_finish();
-    xdag_storage_finish();
-    xdag_mem_finish();
-    xdag_app_log_finish();
+    xdag_block_uninit();
+    xdag_pool_uninit();
+    g_xdag_state = XDAG_STATE_NINT;
+    xdag_wallet_uninit();
+    xdag_netdb_uninit();
+    xdag_storage_uninit();
+    xdag_mem_uninit();
+    xdag_transport_stop();
+
+    //reinit ui if needed
+    xdag_show_state(0);
 }

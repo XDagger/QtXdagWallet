@@ -21,7 +21,7 @@ void xdag_free(void *mem)
 	return free(mem);
 }
 
-void xdag_mem_finish(void)
+void xdag_mem_uninit(void)
 {
 }
 
@@ -121,11 +121,26 @@ void xdag_mem_finish(void)
 	remove(g_tmpname);
 }
 
-int xdag_free_all(void)
+void xdag_mem_uninit(void)
 {
 	g_pos = 0;
-	return 0;
 }
 
 #endif
 
+char** xdagCreateStringArray(int count, int stringLen)
+{
+	char** stringArray = malloc(count * sizeof(char*));
+	for (int i = 0; i < count; ++i) {
+		stringArray[i] = malloc(stringLen);
+	}
+	return  stringArray;
+}
+
+void xdagFreeStringArray(char** stringArray, int count)
+{
+	for (int i = 0; i < count; ++i) {
+		free(stringArray[i]);
+	}
+	free(stringArray);
+}

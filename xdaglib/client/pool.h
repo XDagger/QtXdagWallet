@@ -4,6 +4,7 @@
 #define XDAG_POOL_H
 
 #include <stdio.h>
+#include <pthread.h>
 #include "block.h"
 #include "hash.h"
 
@@ -25,9 +26,6 @@ extern int xdag_start_wallet_mainthread(const char *pool_arg);
 /* send block to network via pool */
 extern int xdag_send_block_via_pool(struct xdag_block *b);
 
-/* output to the file a list of miners */
-extern int xdag_print_miners(FILE *out);
-
 extern struct xdag_pool_task g_xdag_pool_task[2];
 extern uint64_t g_xdag_pool_ntask;
 extern xdag_hash_t g_xdag_mined_hashes[XDAG_POOL_N_CONFIRMATIONS],
@@ -36,6 +34,9 @@ extern xdag_hash_t g_xdag_mined_hashes[XDAG_POOL_N_CONFIRMATIONS],
 extern int g_xdag_mining_threads;
 /* poiter to mutex for optimal share */
 extern void *g_ptr_share_mutex;
+
+extern void xdag_pool_uninit();
+
 
 #ifdef __cplusplus
 }
