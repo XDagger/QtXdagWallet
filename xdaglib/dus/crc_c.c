@@ -25,7 +25,7 @@ extern "C" {
 #include <dus/error.h>
 #else
 #define _errn(n) return ((n) << 1 | 1)
-#include "../include/crc.h"
+#include "crc.h"
 #endif
 
 static const char version[]="CRC library, ...-T4.046-T11.609"; /* $DVS:time$ */

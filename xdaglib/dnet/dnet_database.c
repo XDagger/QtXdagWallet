@@ -7,7 +7,7 @@
 #include <limits.h>
 #include <pthread.h>
 #include <unistd.h>
-#include "../dus/programs/dar/source/include/crc.h"
+#include "../dus/crc.h"
 #include "dnet_database.h"
 #include "dnet_main.h"
 

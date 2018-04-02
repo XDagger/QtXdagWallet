@@ -5,7 +5,7 @@
 
 #include <sys/types.h>
 #include "system.h"
-#include "../dus/programs/dfstools/source/include/dfsrsa.h"
+#include "../dus/dfsrsa.h"
 
 #ifdef __cplusplus
 extern "C" {
