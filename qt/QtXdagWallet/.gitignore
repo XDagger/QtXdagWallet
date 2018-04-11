@@ -1,5 +1,7 @@
 *.Release
 *.Debug
+*.release
+*.debug
 *.pro.user.*
 /Makefile
 *.dat
