@@ -1,15 +1,17 @@
 #ifndef _SYSTEM_H
 #define _SYSTEM_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #if defined(_WIN32) || defined(_WIN64)
 
 #include <Windows.h>
 #define inline              __inline
 #include "../dus/dfsrsa.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+
 
 #define strtok_r            strtok_s
 #define localtime_r(a, b)   localtime_s(b, a)

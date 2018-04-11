@@ -5,3 +5,4 @@
 *.dat
 ui_*.h
 *.pro.user
+*.qmake.stash
