@@ -1,7 +1,11 @@
 #include "qtwrapper.h"
 #include "../client/xdagmain.h"
 #include "../client/version.h"
+#if defined (__MACOS__) || defined (__APPLE__)
+#include <sys/malloc.h>
+#else
 #include <malloc.h>
+#endif
 
 st_xdag_app_msg* (*g_app_callback_func)(const void* callback_object,st_xdag_event *event);
 void* g_callback_object;

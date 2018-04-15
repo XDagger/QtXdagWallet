@@ -3,7 +3,7 @@
 #include <QMap>
 
 
-XdagWalletProcessThread::XdagWalletProcessThread(QObject *parent = 0)
+XdagWalletProcessThread::XdagWalletProcessThread(QObject *parent)
     :m_bStopped(true)
 {
     qDebug() << "xdag process thread constructor: " << QThread::currentThreadId();
