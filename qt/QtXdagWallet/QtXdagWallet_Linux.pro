@@ -24,11 +24,13 @@ INCLUDEPATH += $$PWD\..\xdaglib
 SSL_LIB_DIR = /usr/lib
 
 #qt lib dir
-QT_LIB_DIR = /opt/Qt5.7.1/5.7/gcc_64/lib
-QT_PLUGINS_DIR = /opt/Qt5.7.1/5.7/gcc_64/plugins
+QT_LIB_DIR = /opt/Qt5.9.1/5.9.1/gcc_64/lib
+QT_PLUGINS_DIR = /opt/Qt5.9.1/5.9.1/gcc_64/plugins
 #libs
 LIBS += -lpthread -lssl -lcrypto
 
+QMAKE_LFLAGS += -Wl,-rpath,./lib
+QMAKE_RPATHDIR += ./lib
 QMAKE_CFLAGS += -DHAVE_STRUCT_TIMESPEC -D_TIMESPEC_DEFINED -DDFSTOOLS -DCHEATCOIN -DNDEBUG -D_CRT_SECURE_NO_WARNINGS -Wall
 
 QMAKE_CXXFLAGS += -DHAVE_STRUCT_TIMESPEC -D_TIMESPEC_DEFINED -DDFSTOOLS -DCHEATCOIN -DNDEBUG -D_CRT_SECURE_NO_WARNINGS -Wall
@@ -90,13 +92,13 @@ linux {
         TARGET = xdagwallet
         QMAKE_CLEAN += $$DESTDIR/*.*
 
-        DEBUG_DESTDIR_LINUX = $${DESTDIR}
-        DEBUG_DESTDIR_LINUX_PLATFORM = $${DESTDIR}/platforms
+#        DEBUG_DESTDIR_LINUX = $${DESTDIR}
+#        DEBUG_DESTDIR_LINUX_PLATFORM = $${DESTDIR}/platforms
 
-        QMAKE_POST_LINK +=$$quote(rm -rf $${DEBUG_DESTDIR_LINUX_PLATFORM}$$escape_expand(\n\t))
-        QMAKE_POST_LINK +=$$quote(mkdir $${DEBUG_DESTDIR_LINUX_PLATFORM}$$escape_expand(\n\t))
-        QMAKE_POST_LINK +=$$quote(cp -f $${EXTRA_BINFILES} $${DEBUG_DESTDIR_LINUX}$$escape_expand(\n\t))
-        QMAKE_POST_LINK +=$$quote(cp -rf $${EXTRA_PLATFORM_BINFILES} $${DEBUG_DESTDIR_LINUX_PLATFORM}$$escape_expand(\n\t))
+#        QMAKE_POST_LINK +=$$quote(rm -rf $${DEBUG_DESTDIR_LINUX_PLATFORM}$$escape_expand(\n\t))
+#        QMAKE_POST_LINK +=$$quote(mkdir $${DEBUG_DESTDIR_LINUX_PLATFORM}$$escape_expand(\n\t))
+#        QMAKE_POST_LINK +=$$quote(cp -f $${EXTRA_BINFILES} $${DEBUG_DESTDIR_LINUX}$$escape_expand(\n\t))
+#        QMAKE_POST_LINK +=$$quote(cp -rf $${EXTRA_PLATFORM_BINFILES} $${DEBUG_DESTDIR_LINUX_PLATFORM}$$escape_expand(\n\t))
     }
 
     release{
@@ -106,33 +108,12 @@ linux {
         TARGET = xdagwallet
         QMAKE_CLEAN += $$DESTDIR/*.*
 
-        RELEASE_DESTDIR_LINUX = $${DESTDIR}
-        RELEASE_DESTDIR_LINUX_PLATFORM = $${DESTDIR}/platforms
+#        RELEASE_DESTDIR_LINUX = $${DESTDIR}
+#        RELEASE_DESTDIR_LINUX_PLATFORM = $${DESTDIR}/platforms
 
-        QMAKE_POST_LINK +=$$quote(rm -rf $${RELEASE_DESTDIR_LINUX_PLATFORM}$$escape_expand(\n\t))
-        QMAKE_POST_LINK +=$$quote(mkdir $${RELEASE_DESTDIR_LINUX_PLATFORM}$$escape_expand(\n\t))
-        QMAKE_POST_LINK +=$$quote(cp -f $${EXTRA_BINFILES} $${RELEASE_DESTDIR_LINUX}$$escape_expand(\n\t))
-        QMAKE_POST_LINK +=$$quote(cp -rf $${EXTRA_PLATFORM_BINFILES} $${RELEASE_DESTDIR_LINUX_PLATFORM}$$escape_expand(\n\t))
+#        QMAKE_POST_LINK +=$$quote(rm -rf $${RELEASE_DESTDIR_LINUX_PLATFORM}$$escape_expand(\n\t))
+#        QMAKE_POST_LINK +=$$quote(mkdir $${RELEASE_DESTDIR_LINUX_PLATFORM}$$escape_expand(\n\t))
+#        QMAKE_POST_LINK +=$$quote(cp -f $${EXTRA_BINFILES} $${RELEASE_DESTDIR_LINUX}$$escape_expand(\n\t))
+#        QMAKE_POST_LINK +=$$quote(cp -rf $${EXTRA_PLATFORM_BINFILES} $${RELEASE_DESTDIR_LINUX_PLATFORM}$$escape_expand(\n\t))
     }
-
-
-#    release{
-#        DESTDIR = $$PWD\release
-#        OBJECTS_DIR = $$PWD\release
-#        MOC_DIR = $$PWD\release
-#        TARGET = xdagwallet
-#        QMAKE_CLEAN += $$DESTDIR\*.pdb $$DESTDIR\*.dll $$DESTDIR\*.exe $$DESTDIR\platforms\*.dll
-
-#        RELEASE_DESTDIR_WIN = $${DESTDIR}
-#        RELEASE_DESTDIR_WIN_PLATFORM = $${DESTDIR}/platforms
-#        RELEASE_DESTDIR_WIN ~= s,/,\\,g
-#        RELEASE_DESTDIR_WIN_PLATFORM ~= s,/,\\,g
-#        QMAKE_POST_LINK +=$$quote(if not exist $${RELEASE_DESTDIR_WIN_PLATFORM} mkdir $${RELEASE_DESTDIR_WIN_PLATFORM}$$escape_expand(\n\t))
-#        QMAKE_POST_LINK +=$$quote(xcopy/e/r/h/y $${PLATFORM_DIC} $${RELEASE_DESTDIR_WIN_PLATFORM}$$escape_expand(\n\t))
-#        for(FILE,EXTRA_BINFILES_WIN){
-#            QMAKE_POST_LINK +=$$quote(copy $${FILE} $${RELEASE_DESTDIR_WIN}$$escape_expand(\n\t))
-#        }
-
-#    }
-
 }
