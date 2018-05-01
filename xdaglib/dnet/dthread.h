@@ -12,7 +12,7 @@ extern "C" {
 #if !defined(__LDuS__) && !defined(_WIN32) && !defined(_WIN64)
 
 #include <sched.h>
-#include "../ldus/source/include/ldus/atomic.h"
+#include "../ldus/atomic.h"
 
 typedef struct dthread_mutex {
 	ldus_atomic head, tail;

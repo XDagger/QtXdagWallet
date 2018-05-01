@@ -23,9 +23,9 @@
 #include <poll.h>
 #endif
 #include "system.h"
-#include "../dus/programs/dfstools/source/dfslib/dfslib_crypt.h"
-#include "../dus/programs/dfstools/source/dfslib/dfslib_string.h"
-#include "../dus/programs/dar/source/include/crc.h"
+#include "../dus/dfslib_crypt.h"
+#include "../dus/dfslib_string.h"
+#include "../dus/crc.h"
 #include "address.h"
 #include "block.h"
 #include "xdagmain.h"

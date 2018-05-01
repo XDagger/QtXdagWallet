@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=xdagwallet
+Exec=xdagwallet
+Comment=wallet for xdag
+Icon=xdaglogo
+Type=Application
+Categories=Game;

@@ -8,7 +8,7 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include "system.h"
-#include "../ldus/source/include/ldus/rbtree.h"
+#include "../ldus/rbtree.h"
 #include "block.h"
 #include "crypt.h"
 #include "wallet.h"

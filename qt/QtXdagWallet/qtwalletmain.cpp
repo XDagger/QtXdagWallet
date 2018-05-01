@@ -79,8 +79,8 @@ void QtWalletMain::initUI()
     m_pLEAccount->setFixedSize(ADRESS_LINEEDIT_LEN,QLINE_EDIT_HEIGHT);
     m_pPBDisConnect->setFixedSize(QPUSHBUTTON_LEN,QPUSHBUTTON_HEIGHT);
     m_pPBDisConnect->setEnabled(false);
-    m_pLEAccount->setFocusPolicy(Qt::NoFocus);
-    m_pLEBalance->setFocusPolicy(Qt::NoFocus);
+    m_pLEAccount->setReadOnly(true);
+    m_pLEBalance->setReadOnly(true);
     m_pHBLAccount = new QHBoxLayout;
     m_pHBLAccount->setSpacing(0);
     m_pHBLAccount->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
@@ -426,8 +426,6 @@ void QtWalletMain::onXdagUpdateUI(UpdateUiInfo info){
 }
 
 void QtWalletMain::procUpdateUiInfo(UpdateUiInfo info){
-    m_pLEAccount->clear();
-    m_pLEBalance->clear();
     ui->statusBar->clearMessage();
 
     //not initialized
@@ -472,7 +470,9 @@ void QtWalletMain::procUpdateUiInfo(UpdateUiInfo info){
     if(info.address_state == en_address_not_ready){
         m_pLEAccount->setText(tr("Not Ready"));
     }else{
-        m_pLEAccount->setText(info.address);
+        if(info.address != m_pLEAccount->text()){
+            m_pLEAccount->setText(info.address);
+        }
     }
 
     ui->statusBar->showMessage(getXdagProgramState(info.xdag_program_state));

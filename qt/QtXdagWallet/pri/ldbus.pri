@@ -1,6 +1,6 @@
 SOURCES +=
 
 HEADERS += \
-    $$PWD/../../../xdaglib/ldus/source/include/ldus/atomic.h \
-    $$PWD/../../../xdaglib/ldus/source/include/ldus/list.h \
-    $$PWD/../../../xdaglib/ldus/source/include/ldus/rbtree.h
+    $$PWD/../../../xdaglib/ldus/atomic.h \
+    $$PWD/../../../xdaglib/ldus/list.h \
+    $$PWD/../../../xdaglib/ldus/rbtree.h

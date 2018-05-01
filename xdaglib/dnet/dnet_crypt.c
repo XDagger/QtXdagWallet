@@ -6,10 +6,10 @@
 #include <unistd.h>
 #include <termios.h>
 #include "system.h"
-#include "../dus/programs/dfstools/source/dfslib/dfslib_random.h"
-#include "../dus/programs/dfstools/source/dfslib/dfslib_crypt.h"
-#include "../dus/programs/dfstools/source/dfslib/dfslib_string.h"
-#include "../dus/programs/dar/source/include/crc.h"
+#include "../dus/dfslib_random.h"
+#include "../dus/dfslib_crypt.h"
+#include "../dus/dfslib_string.h"
+#include "../dus/crc.h"
 #include "dnet_database.h"
 #include "dnet_crypt.h"
 #include "dnet_main.h"

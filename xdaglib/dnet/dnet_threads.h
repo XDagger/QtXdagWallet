@@ -5,7 +5,7 @@
 
 #include <stdint.h>
 #include <pthread.h>
-#include "../ldus/source/include/ldus/list.h"
+#include "../ldus/list.h"
 #include "dnet_connection.h"
 #include "dnet_stream.h"
 
