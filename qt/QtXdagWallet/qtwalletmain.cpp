@@ -5,6 +5,8 @@
 
 #include <QMessageBox>
 #include <QDialog>
+#include <QFile>
+
 QWaitCondition g_condAuthTyped;
 QWaitCondition g_condUiNotified;
 QMutex g_Mutex;
@@ -24,6 +26,8 @@ QQueue<UiNotifyMessage> g_MsgQueue;
 #define QPUSHBUTTON_LEN     80
 #define QPUSHBUTTON_HEIGHT  25
 
+#define MAX_XDAG_CACHE_POOL_NUM 20
+
 
 QtWalletMain::QtWalletMain(QWidget *parent) :
     QMainWindow(parent),
@@ -31,6 +35,7 @@ QtWalletMain::QtWalletMain(QWidget *parent) :
     ui(new Ui::QtWalletMain)
 {
     initUI();
+    initCache();
     initWorkThread();
     initSignal();
 }
@@ -48,11 +53,12 @@ void QtWalletMain::initUI()
 
     setWindowIcon(QIcon(":/icon/xdagwallet.ico"));
     m_pLBPool = new QLabel(tr("Pool"));
-    m_pLEPool = new QLineEdit("cn.xdag.top:8899");
+    m_pLEPool = new CacheLineEdit;
     m_pPBConnect = new QPushButton(tr("Connect"));
 
     m_pLBPool->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     m_pLBPool->setFixedSize(QLABEL_LEN,QLABLE_HEIGHT);
+    //m_pLEPool->setText("cn.xdag.top:8989");
     m_pLEPool->setFixedSize(MAX_XDAG_POOL_ADDR_LEN,QLABLE_HEIGHT);
     m_pLEPool->setFixedSize(POOL_LINEEDIT_LEN,QLINE_EDIT_HEIGHT);
     m_pPBConnect->setFixedSize(QPUSHBUTTON_LEN,QPUSHBUTTON_HEIGHT);
@@ -145,9 +151,26 @@ void QtWalletMain::initUI()
     m_pQMLanguage->addAction(m_pQAKorean);
     ui->menuBar->addMenu(m_pQMLanguage);
 
-    m_pTranslator = new QTranslator;
-
     setFixedSize(520,160);
+    m_pTranslator = new QTranslator;
+}
+
+void QtWalletMain::initCache()
+{
+    QFile fPoolCache("pooladdress.cache");
+    if (!fPoolCache.open(QIODevice::ReadOnly | QIODevice::Text)){
+        qDebug() << "pool address not cached";
+    }
+    int cachedPoolNum = 0;
+    m_pTextStream = new QTextStream(&fPoolCache);
+    QString line = m_pTextStream->readLine();
+    m_pLEPool->setText(line);
+    while (!line.isNull() && cachedPoolNum < MAX_XDAG_CACHE_POOL_NUM) {
+        mPoolCacheList.append(line);
+        m_pLEPool->addValue(line);
+        line = m_pTextStream->readLine();
+    }
+    //fPoolCache.close();
 }
 
 void QtWalletMain::translateUI(XdagCommonDefine::EN_XDAG_UI_LANG lang)
