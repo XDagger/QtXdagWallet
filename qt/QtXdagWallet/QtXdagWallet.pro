@@ -1,41 +1,125 @@
-#-------------------------------------------------
-#
-# Project created by QtCreator 2018-02-28T11:17:14
-#
-#-------------------------------------------------
+# -------------------------------------------------
+# QtXdagWallet - QT Version of XDAG Wallet
+# Please see our website at <https://xdag.io>
+# Maintainer:
+# Bill <amazingbill2017@gmail.com>
+# earthloong <earthloong@gmail.com>
+# (c) 2018 QtXdagWallet Developers
+# License terms set in LICENSE
+# -------------------------------------------------
 
-QT       += core gui
+exists($${OUT_PWD}/QtXdagWallet.pro) {
+    error("You must use shadow build (e.g. mkdir build; cd build; qmake ../QtXdagWallet.pro).")
+}
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+message(Qt version $$[QT_VERSION])
 
-TARGET = QtXdagWallet
+!equals(QT_MAJOR_VERSION, 5) | !greaterThan(QT_MINOR_VERSION, 7) {
+    error("Unsupported Qt version, 5.7+ is required")
+}
+
+include(QXDAGWalletCommon.pri)
+
+TARGET   = QtXdagWallet
 TEMPLATE = app
 
-include($$PWD\pri\client.pri)
-include($$PWD\pri\dnet.pri)
-include($$PWD\pri\dbus.pri)
-include($$PWD\pri\ldbus.pri)
-include($$PWD\pri\win.pri)
-include($$PWD\pri\wrapper.pri)
+DebugBuild {
+    DESTDIR  = $${OUT_PWD}/debug
+} else {
+    DESTDIR  = $${OUT_PWD}/release
+}
+
+#
+# OS Specific settings
+#
+
+MacBuild {
+    #TODO
+    QMAKE_LFLAGS += -Wl,-rpath,./lib
+    QMAKE_RPATHDIR += ./lib
+
+    #openssl lib dir
+    LOCAL_INC_DIR = /usr/local/include
+    LOCAL_LIB_DIR = /usr/local/lib
+
+    #libs
+    LIBS += -L$$LOCAL_LIB_DIR -lpthread -lssl -lcrypto
+
+    #qt lib dir
+    QT_LIB_DIR = /opt/Qt5.9.1/5.9.1/gcc_64/lib
+    QT_PLUGINS_DIR = /opt/Qt5.9.1/5.9.1/gcc_64/plugins
+
+}
+
+iOSBuild {
+    #-- TODO: Add iTunesArtwork
+}
+
+AndroidBuild {
+    #TODO
+}
+
+LinuxBuild {
+    QMAKE_LFLAGS += -Wl,-rpath,./lib
+    QMAKE_RPATHDIR += ./lib
+
+    #openssl lib dir
+    SSL_LIB_DIR = /usr/lib
+
+    #libs
+    LIBS += -lpthread -lssl -lcrypto
+
+    #qt lib dir
+    QT_LIB_DIR = /opt/Qt5.9.1/5.9.1/gcc_64/lib
+    QT_PLUGINS_DIR = /opt/Qt5.9.1/5.9.1/gcc_64/plugins
+}
+
+WindowsBuild {
+    QMAKE_LFLAGS += -STACK:40000000,1000000 -FS
+
+    #libs
+    LIBS += -L$$PWD\win64_dependency\lib -llibeay32
+    LIBS += -L$$PWD\win64_dependency\lib -lssleay32
+    LIBS += -L$$PWD\win64_dependency\lib -lpthreadVC2
+    LIBS += -L$$PWD\win64_dependency\lib -lWS2_32
+    LIBS += -L$$PWD\win64_dependency\lib -llegacy_stdio_definitions
+}
+
+#
+# Branding
+#
+QT       += core widgets
+
+#include
+MacBuild {
+    #TODO
+    INCLUDEPATH += $$PWD/../xdaglib \
+                $$LOCAL_INC_DIR
+}
+
+LinuxBuild {
+    INCLUDEPATH += $$PWD/../xdaglib
+}
+
+WindowsBuild {
+    INCLUDEPATH += $$PWD/../xdaglib \
+                $$PWD/win64_dependency/include
+    include($$PWD\pri\win.pri)
+}
+
+include($$PWD/pri/client.pri)
+include($$PWD/pri/dnet.pri)
+include($$PWD/pri/dbus.pri)
+include($$PWD/pri/ldbus.pri)
+include($$PWD/pri/wrapper.pri)
 
 #include headers
-INCLUDEPATH += $$PWD\..\xdaglib
-INCLUDEPATH += $$PWD\win64_dependency\include
+#INCLUDEPATH += $$PWD\..\xdaglib
+#INCLUDEPATH += $$PWD\win64_dependency\include
 
-#libs
-LIBS += -L$$PWD\win64_dependency\lib -llibeay32
-LIBS += -L$$PWD\win64_dependency\lib -lssleay32
-LIBS += -L$$PWD\win64_dependency\lib -lpthreadVC2
-LIBS += -L$$PWD\win64_dependency\lib -lWS2_32
-LIBS += -L$$PWD\win64_dependency\lib -llegacy_stdio_definitions
-
-#QMAKE_CFLAGS += -DSHA256_USE_OPENSSL_TXFM -DSHA256_OPENSSL_MBLOCK -DHAVE_STRUCT_TIMESPEC -D_TIMESPEC_DEFINED -DDFSTOOLS -DCHEATCOIN -DNDEBUG -Wall
 QMAKE_CFLAGS += -DHAVE_STRUCT_TIMESPEC -D_TIMESPEC_DEFINED -DDFSTOOLS -DCHEATCOIN -DNDEBUG -D_CRT_SECURE_NO_WARNINGS -Wall
-
-#QMAKE_CXXFLAGS += -DSHA256_USE_OPENSSL_TXFM -DSHA256_OPENSSL_MBLOCK -DHAVE_STRUCT_TIMESPEC -D_TIMESPEC_DEFINED -DDFSTOOLS -DCHEATCOIN -DNDEBUG -Wall
 QMAKE_CXXFLAGS += -DHAVE_STRUCT_TIMESPEC -D_TIMESPEC_DEFINED -DDFSTOOLS -DCHEATCOIN -DNDEBUG -D_CRT_SECURE_NO_WARNINGS -Wall
 
-QMAKE_LFLAGS += -STACK:40000000,1000000 -FS
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which as been marked as deprecated (the exact warnings
@@ -90,8 +174,28 @@ TRANSLATIONS += \
     japanese.ts \
     korean.ts
 
-#copy dll to the dest dir
-win32 {
+#
+# others
+#
+MacBuild {
+    #TODO
+}
+
+LinuxBuild | MacBuild {
+    #copy dll to the dest dir
+    EXTRA_BINFILES += \
+        $${SSL_LIB_DIR}/libssl.so \
+        $${SSL_LIB_DIR}/libcrypto.so \
+        $${QT_LIB_DIR}/libQt5Core.so \
+        $${QT_LIB_DIR}/libQt5Gui.so \
+        $${QT_LIB_DIR}/libQt5Widgets.so \
+
+    EXTRA_PLATFORM_BINFILES += \
+        $${QT_PLUGINS_DIR}/platforms/lib*.so \
+}
+
+WindowsBuild {
+    #copy dll to the dest dir
     EXTRA_BINFILES += \
         $$PWD/win64_dependency/dll/libeay32.dll \
         $$PWD/win64_dependency/dll/libssl32.dll \
@@ -109,12 +213,8 @@ win32 {
     EXTRA_BINFILES_WIN ~= s,/,\\,g
 
     debug{
-        DESTDIR = $$PWD\debug
-        OBJECTS_DIR = $$PWD\debug
-        MOC_DIR = $$PWD\debug
-        TARGET = xdagwallet
-        QMAKE_CLEAN += $$DESTDIR\*.pdb $$DESTDIR\*.dll $$DESTDIR\*.exe $$DESTDIR\platforms\*.dll
-        QMAKE_CLEAN += $$DESTDIR\*.*
+        #QMAKE_CLEAN += $$DESTDIR\*.pdb $$DESTDIR\*.dll $$DESTDIR\*.exe $$DESTDIR\platforms\*.dll
+        #QMAKE_CLEAN += $$DESTDIR\*.*
 
 
         DEBUG_DESTDIR_WIN = $${DESTDIR}
@@ -129,11 +229,7 @@ win32 {
     }
 
     release{
-        DESTDIR = $$PWD\release
-        OBJECTS_DIR = $$PWD\release
-        MOC_DIR = $$PWD\release
-        TARGET = xdagwallet
-        QMAKE_CLEAN += $$DESTDIR\*.pdb $$DESTDIR\*.dll $$DESTDIR\*.exe $$DESTDIR\platforms\*.dll
+        #QMAKE_CLEAN += $$DESTDIR\*.pdb $$DESTDIR\*.dll $$DESTDIR\*.exe $$DESTDIR\platforms\*.dll
 
         RELEASE_DESTDIR_WIN = $${DESTDIR}
         RELEASE_DESTDIR_WIN_PLATFORM = $${DESTDIR}/platforms
@@ -146,5 +242,4 @@ win32 {
         }
 
     }
-
 }
