@@ -57,7 +57,8 @@ SOURCES +=\
     WalletInitWidget.cpp \
     PwdLineEdit.cpp \
     XdagMutex.cpp \
-    ErrorDialog.cpp
+    ErrorDialog.cpp \
+    CacheLineEdit.cpp
 
 HEADERS  += \
     XdagWalletProcessThread.h \
@@ -69,7 +70,8 @@ HEADERS  += \
     XdagCommonDefine.h \
     PwdLineEdit.h \
     XdagMutex.h \
-    ErrorDialog.h
+    ErrorDialog.h \
+    CacheLineEdit.h
 
 FORMS    += qtwalletmain.ui \
     walletinitwidget.ui \

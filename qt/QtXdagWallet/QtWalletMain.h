@@ -1,6 +1,7 @@
 #ifndef QTWALLETMAIN_H
 #define QTWALLETMAIN_H
 
+#include "CacheLineEdit.h"
 #include "ErrorDialog.h"
 #include "PwdDialog.h"
 #include "XdagWalletProcessThread.h"
@@ -15,6 +16,8 @@
 #include <QAction>
 #include <QMenu>
 #include <QTranslator>
+#include <QTextStream>
+#include <QList>
 
 namespace Ui {
 class QtWalletMain;
@@ -34,7 +37,7 @@ private:
     Ui::QtWalletMain *ui;
 
     QLabel *m_pLBPool;
-    QLineEdit *m_pLEPool;
+    CacheLineEdit *m_pLEPool;
     QPushButton *m_pPBConnect;
     QPushButton *m_pPBDisConnect;
     QHBoxLayout *m_pHBLPool;
@@ -75,9 +78,14 @@ private:
     //translator
     QTranslator *m_pTranslator;
 
+    //settings
+    QTextStream *m_pTextStream;
+    QList<QString> mPoolCacheList;
+
     XdagCommonDefine::EN_XDAG_UI_LANG mLanguage;
 
     void initUI();
+    void initCache();
     void translateUI(XdagCommonDefine::EN_XDAG_UI_LANG lang);
     void initWorkThread();
     void initSignal();
@@ -96,8 +104,6 @@ private slots:
     void onPwdSeted(QString pwd);
     void onPwdReTyped(QString pwd);
     void onRdmTyped(QString rdm);
-
-
 };
 
 #endif // QTWALLETMAIN_H
