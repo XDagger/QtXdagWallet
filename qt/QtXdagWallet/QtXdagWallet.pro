@@ -39,8 +39,10 @@ MacBuild {
     QMAKE_RPATHDIR += ./lib
 
     #openssl lib dir
-    LOCAL_INC_DIR = /usr/local/include
-    LOCAL_LIB_DIR = /usr/local/lib
+    LOCAL_INC_DIR += /usr/local/include \
+                    /usr/local/include/node
+    LOCAL_LIB_DIR += /usr/local/lib \
+                    -L /usr/local/Cellar/openssl/1.0.2n/lib/
 
     #libs
     LIBS += -L$$LOCAL_LIB_DIR -lpthread -lssl -lcrypto
