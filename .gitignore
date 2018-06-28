@@ -49,3 +49,5 @@ qrc_*.cpp
 Makefile.Debug
 Makefile.Release
 
+qt/build-*-Debug
+qt/build-*-Release
