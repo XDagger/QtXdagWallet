@@ -49,7 +49,10 @@ void QtWalletMain::initUI()
 {
     ui->setupUi(this);
 
-    setWindowTitle(tr("Dagger Wallet(XDAG)"));
+    QString title = tr("Dagger Wallet(XDAG)");
+    title += xdag_get_version();
+
+    setWindowTitle(title);
 
     setWindowIcon(QIcon(":/icon/xdagwallet.ico"));
     m_pLBPool = new QLabel(tr("Pool"));
