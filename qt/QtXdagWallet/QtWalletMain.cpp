@@ -48,8 +48,7 @@ QtWalletMain::~QtWalletMain()
 void QtWalletMain::initUI()
 {
     ui->setupUi(this);
-
-    setWindowTitle(tr("Dagger Wallet(XDAG)"));
+    setWindowTitle(tr("Dagger Wallet(XDAG)") + " Ver:" + xdag_get_version());
 
     setWindowIcon(QIcon(":/icon/xdagwallet.ico"));
     m_pLBPool = new QLabel(tr("Pool"));
@@ -207,7 +206,7 @@ void QtWalletMain::translateUI(XdagCommonDefine::EN_XDAG_UI_LANG lang)
     m_pTranslator->load(qmFilePath);
 
     if(qApp->installTranslator(m_pTranslator)){
-        setWindowTitle(tr("Dagger Wallet(XDAG)"));
+        setWindowTitle(tr("Dagger Wallet(XDAG)") + " Ver:" + xdag_get_version());
         m_pLBPool->setText(tr("Pool"));
         m_pPBConnect->setText(tr("Connect"));
         m_pPBDisConnect->setText(tr("DisConnect"));
