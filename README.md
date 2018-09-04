@@ -1,14 +1,14 @@
 The Dagger (XDAG) Qt Wallet
 
-- Community site: https://xdag.org
+- Community site: https://xdag.io
 - The Main net was launched January 5, 2018 at 22:45 GMT.
 
 - Purpose
 
 	The purpose of the project is making a light Xdag Wallet that 
-	can cross platform(such as Linux,Windows,MacOs) easily£¬and in the
+	can cross platform(such as Linux,Windows,MacOs) easilyÂ£Â¬and in the
 	near future this project will be ported on Arm Architecture so that
-	mobile devices can use the Xdag Wallet¡£ 
+	mobile devices can use the Xdag WalletÂ¡Â£ 
 
 Install and run (windows):
 -----------------------
@@ -27,8 +27,8 @@ Install and run (windows):
 		https://docs.microsoft.com/zh-cn/windows-hardware/drivers/debugger/debugger-download-tools
 		
 		Notice:
-		When you install the win debuger,you must choose the option "Debugging Tools for windows"£¬if your are a starter of 
-		Windows SDK£¬all options are suggested to choose¡£
+		When you install the win debuger,you must choose the option "Debugging Tools for windows"Â£Â¬if your are a starter of 
+		Windows SDKÂ£Â¬all options are suggested to chooseÂ¡Â£
 	
 	- Qt5.7.1:
 		
@@ -47,7 +47,7 @@ Install and run (windows):
 			Open the Qt project file in the relative path "qt\QtXdagWallet\QtXdagWallet.pro"
 
 		(2) Configure the compiler and debugger
-			Tools --> Options --> Build and Run£¬and make sure the following option is auto detected
+			Tools --> Options --> Build and RunÂ£Â¬and make sure the following option is auto detected
 			
 			Kit:
 				make sure the kit is Desktop Qt %{Qt:Version} MSVC2015_64bit
@@ -65,7 +65,7 @@ Install and run (windows):
 
 		(3) Set the build dir
 			(Project --> Build)
-			Click the project button in the Qt Creator 4.2.0 and Configure the Build Options£¬DISABLE the Shadow Build
+			Click the project button in the Qt Creator 4.2.0 and Configure the Build OptionsÂ£Â¬DISABLE the Shadow Build
 			
 		(4) Copy your Xdag Wallet File (if you already have an Xdag Wallet Account JUST FOR DEVELOPMENT)
 			copy your xdag wallet file for development to the  relative path "QtXdagWallet\qt\QtXdagWallet"
@@ -78,7 +78,7 @@ Install and run (windows):
 
 - Contact information ( amazingbill2017@gmail.com )
 	
-	If you have any question and suggest on this project you can send email to my GMail¡£
+	If you have any question and suggest on this project you can send email to my GMailÂ¡Â£
 	
 		
 Maintainers:
